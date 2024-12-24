@@ -4,10 +4,11 @@ import React, { useState, useRef, useEffect } from "react";
 import { IoLogOutOutline, IoLogInOutline } from "react-icons/io5";
 import Link from "next/link";
 import Image from "next/image";
-import { signInWithPopup, signOut } from "firebase/auth";
-import { auth, provider } from "@/lib/firebase/config";
+import { auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
 import { MdReceiptLong, MdSettings } from "react-icons/md";
+import GoogleBtn from "../ui/GoogleBtn";
+import { signOut } from "firebase/auth";
 
 interface User {
   displayName?: string | null;
@@ -38,9 +39,9 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
   const router = useRouter();
   return (
     <div className="relative" ref={menuRef as any}>
-      <div onClick={() => setIsOpen(!isOpen)}>
+      <div>
         {user?.photoURL ? (
-          <div className="relative">
+          <div className="relative" onClick={() => setIsOpen(!isOpen)}>
             <Image
               width={32}
               height={32}
@@ -50,9 +51,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
             />
           </div>
         ) : (
-          <button className="text-primary-200 font-semibold text-sm tracking-wide">
-            Sign In
-          </button>
+          <GoogleBtn />
         )}
       </div>
 
@@ -60,7 +59,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
           <div className="py-1">
-            {user ? (
+            {user && (
               <>
                 {/* User Info */}
                 <div className="px-4 py-3">
@@ -106,18 +105,6 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
                   Sign Out
                 </button>
               </>
-            ) : (
-              // Sign In Button
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  signInWithPopup(auth, provider);
-                }}
-                className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                <IoLogInOutline className="mr-2 h-4 w-4" />
-                Sign In with Google
-              </button>
             )}
           </div>
         </div>
