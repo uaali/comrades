@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { IoLogOutOutline, IoLogInOutline } from "react-icons/io5";
+import { IoLogOutOutline } from "react-icons/io5";
 import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
-import { MdReceiptLong, MdSettings } from "react-icons/md";
+import { MdPerson, MdReceiptLong, MdSettings } from "react-icons/md";
 import GoogleBtn from "../ui/GoogleBtn";
 import { signOut } from "firebase/auth";
 
@@ -18,9 +18,10 @@ interface User {
 
 interface UserMenuProps {
   user: User | null | undefined;
+  loading: boolean;
 }
 
-const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
+const UserMenu: React.FC<UserMenuProps> = ({ user, loading }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const menuRef = useRef<HTMLElement>(null);
 
@@ -41,7 +42,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
     <div className="relative" ref={menuRef as any}>
       <div>
         {user?.photoURL ? (
-          <div className="relative" onClick={() => setIsOpen(!isOpen)}>
+          <div
+            className="relative hover:cursor-pointer"
+            onClick={() => setIsOpen(!isOpen)}
+          >
             <Image
               width={32}
               height={32}
@@ -49,6 +53,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ user }) => {
               alt="Profile"
               className="h-8 w-8 rounded-full border-primary-200 border"
             />
+          </div>
+        ) : loading ? (
+          <div className="rounded-full animate-pulse bg-white">
+            <MdPerson className="h-8 w-8 text-gray-500" />
           </div>
         ) : (
           <GoogleBtn />

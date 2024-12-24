@@ -11,7 +11,7 @@ import { auth } from "@/lib/firebase/config";
 
 const Navbar = () => {
   const pathName = usePathname();
-  const [user] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
 
   const navLinks = [
     { path: "/", label: "Explore", icon: <MdExplore className="w-5 h-5" /> },
@@ -78,7 +78,7 @@ const Navbar = () => {
             ))}
           </Dropdown>
         </div>
-        <UserMenu user={user} />
+        <UserMenu user={user} loading={loading} />
       </nav>
 
       {/* Mobile Bottom Navigation */}
