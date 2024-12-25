@@ -47,7 +47,7 @@ const Balances = ({ user }: { user: User }) => {
     }
   }, []);
   return (
-    <div className="w-1/2 font-inter flex flex-col gap-2">
+    <div className="w-1/2 md:w-1/4 font-inter flex flex-col gap-2">
       <div className=" bg-primary-200 text-white p-4 rounded space-y-4">
         <p className="font-bold">KSH. {walletBalance}</p>
         <button className="flex items-center gap-1 bg-accent-200 px-3 py-1 rounded-lg">
@@ -66,7 +66,12 @@ const Balances = ({ user }: { user: User }) => {
             height={30}
           />
         </div>
-        <Link href="/blog/convert-tokens" className="text-sm underline text-primary-300 text-center">How do I convert to cash?</Link>
+        <Link
+          href="/blog/convert-tokens"
+          className="text-sm underline text-primary-300 text-center"
+        >
+          How do I convert to cash?
+        </Link>
       </div>
     </div>
   );

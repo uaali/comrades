@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 
-const INTASEND_API_KEY = process.env.INTASEND_API_KEY;
-const INTASEND_PUBLISHABLE_KEY =
-  "ISPubKey_test_a51c4335-0b42-4dd3-b7fa-d37aa35dc0ec";
+const INTASEND_API_KEY = process.env.INTASEND_API_KEY_SECRET;
 
 export async function POST(request: Request) {
     const data = await request.json();
