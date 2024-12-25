@@ -9,8 +9,9 @@ import { MdArrowForward } from "react-icons/md";
 
 const Balances = ({ user }: { user: User }) => {
   const [walletBalance, setWalletBalance] = useState<null | string>();
-  const [tokenBalance, setTokenBalance] = useState<null | string>();
+  const [tokenBalance, setTokenBalance] = useState<null | number>();
   useEffect(() => {
+    console.log(user);
     if (user.walletId) {
       const fetchWallet = async () => {
         const data = await fetch("/api/intasend/get-wallet", {
@@ -34,16 +35,19 @@ const Balances = ({ user }: { user: User }) => {
           body: JSON.stringify({ uid: user.uid }),
         });
         const walletData = await wallet.json();
-        console.log(walletData);
+        if (walletData.errors.length > 0) {
+          console.error(walletData.errors);
+          return;
+        }
         await updateUser(user.uid, { walletId: walletData.wallet_id });
         setWalletBalance(walletData.available_balance);
       };
       createWallet();
     }
-    if (user.tokenBalance) {
+    if (typeof user.tokenBalance === "number") {
       setTokenBalance(user.tokenBalance);
     } else {
-      updateUser(user.uid, { tokenBalance: "0" });
+      updateUser(user.uid, { tokenBalance: 0 });
     }
   }, []);
   return (

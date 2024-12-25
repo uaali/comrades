@@ -13,7 +13,7 @@ const Dashboard = () => {
   const [fetchedUser, setFetchedUser] = useState<User | null>();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || error) return;
     const fetchUser = async () => {
       const fetchedUser = await getUser(user.uid);
       setFetchedUser(fetchedUser);
