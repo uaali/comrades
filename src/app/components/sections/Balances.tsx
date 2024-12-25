@@ -35,7 +35,7 @@ const Balances = ({ user }: { user: User }) => {
           body: JSON.stringify({ uid: user.uid }),
         });
         const walletData = await wallet.json();
-        if (walletData.errors.length > 0) {
+        if (walletData.errors?.length > 0) {
           console.error(walletData.errors);
           return;
         }

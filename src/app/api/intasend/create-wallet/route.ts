@@ -28,7 +28,7 @@ export async function POST(request: Request) {
           currency: "KES",
           wallet_type: "WORKING",
           can_disburse: true,
-          label: uid,
+          label: `${uid}v4`,
         }),
       }
     );
