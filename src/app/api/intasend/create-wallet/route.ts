@@ -29,12 +29,11 @@ export async function POST(request: Request) {
         currency: "KES",
         wallet_type: "WORKING",
         can_disburse: true,
-        label: `${uid}v4`,
+        label: `${uid}v7`,
       }),
     });
 
     const responseData = await response.json();
-    console.log(responseData);	
 
     return NextResponse.json(responseData);
   } catch (error) {

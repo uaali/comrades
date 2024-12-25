@@ -14,30 +14,37 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user || error) return;
+
+    let isSubscribed = true;
+    let retryCount = 0;
+    const maxRetries = 5;
+
     const fetchUser = async () => {
-      const fetchedUser = await getUser(user.uid);
-      setFetchedUser(fetchedUser);
+      try {
+        const fetchedUser = await getUser(user.uid);
+
+        if (!isSubscribed) return;
+
+        if (fetchedUser) {
+          setFetchedUser(fetchedUser);
+        } else if (retryCount < maxRetries) {
+          retryCount++;
+          // Exponential backoff
+          const delay = Math.min(1000 * Math.pow(2, retryCount), 10000);
+          setTimeout(fetchUser, delay);
+        }
+      } catch (err) {
+        console.error("Error fetching user:", err);
+        // Handle error appropriately
+      }
     };
+
     fetchUser();
-  }, [user]);
-  // useEffect(() => {
-  //   if (!user) return;
-  //   const fetchUser = async () => {
-  //     const fetchedUser = await getUser(user.uid);
-  //     if (fetchedUser.walletId) {
-  //       const data = await fetch("/api/intasend/get-wallet", {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({ id: fetchedUser.walletId }),
-  //       });
-  //       const wallet = await data.json();
-  //       setWallet(wallet);
-  //     }
-  //   };
-  //   fetchUser();
-  // }, [user]);
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [user, error]);
   return (
     <main className="px-4 md:px-6 py-3">
       {loading || (user && !fetchedUser && <p>Loading...</p>)}

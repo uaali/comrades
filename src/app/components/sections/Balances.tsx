@@ -34,9 +34,8 @@ const Balances = ({ user }: { user: User }) => {
           body: JSON.stringify({ uid: user.uid }),
         });
         const walletData = await wallet.json();
-        console.log(walletData);
-        if (walletData.error) {
-          console.error(walletData.error);
+        if (walletData.error || walletData.errors?.length > 0) {
+          console.error(walletData.error || walletData.errors);
           return;
         }
         await updateUser(user.uid, { walletId: walletData.wallet_id });
@@ -47,6 +46,7 @@ const Balances = ({ user }: { user: User }) => {
     if (typeof user.tokenBalance === "number") {
       setTokenBalance(user.tokenBalance);
     } else {
+      setTokenBalance(0);
       updateUser(user.uid, { tokenBalance: 0 });
     }
   }, []);
