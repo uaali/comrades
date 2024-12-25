@@ -3,11 +3,14 @@ import { NextResponse } from "next/server";
 const INTASEND_API_KEY = process.env.INTASEND_API_KEY_SECRET;
 
 export async function POST(request: Request) {
-    const data = await request.json();
-    const uid= data.uid;
+  const data = await request.json();
+  const uid = data.uid;
   try {
     if (!uid) {
-      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
     }
     if (!INTASEND_API_KEY) {
       return NextResponse.json(
@@ -16,27 +19,24 @@ export async function POST(request: Request) {
       );
     }
 
-    const response = await fetch(
-      "https://sandbox.intasend.com/api/v1/wallets/",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${INTASEND_API_KEY}`,
-        },
-        body: JSON.stringify({
-          currency: "KES",
-          wallet_type: "WORKING",
-          can_disburse: true,
-          label: `${uid}v4`,
-        }),
-      }
-    );
+    const response = await fetch("https://payment.intasend.com/api/v1/wallets/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${INTASEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        currency: "KES",
+        wallet_type: "WORKING",
+        can_disburse: true,
+        label: `${uid}v4`,
+      }),
+    });
 
+    const responseData = await response.json();
+    console.log(responseData);	
 
-    const data = await response.json();
-
-    return NextResponse.json(data);
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Error creating wallet:", error);
     return NextResponse.json(

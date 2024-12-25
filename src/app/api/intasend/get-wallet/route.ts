@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const response = await fetch(
-      `https://sandbox.intasend.com/api/v1/wallets/${id}`,
+      `https://payment.intasend.com/api/v1/wallets/${id}/`,
       {
         method: "GET",
         headers: {
@@ -27,8 +27,8 @@ export async function POST(request: Request) {
       }
     );
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    const responseData = await response.json();
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error("Error creating wallet:", error);
     return NextResponse.json(

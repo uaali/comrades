@@ -11,7 +11,6 @@ const Balances = ({ user }: { user: User }) => {
   const [walletBalance, setWalletBalance] = useState<null | string>();
   const [tokenBalance, setTokenBalance] = useState<null | number>();
   useEffect(() => {
-    console.log(user);
     if (user.walletId) {
       const fetchWallet = async () => {
         const data = await fetch("/api/intasend/get-wallet", {
@@ -35,8 +34,9 @@ const Balances = ({ user }: { user: User }) => {
           body: JSON.stringify({ uid: user.uid }),
         });
         const walletData = await wallet.json();
-        if (walletData.errors?.length > 0) {
-          console.error(walletData.errors);
+        console.log(walletData);
+        if (walletData.error) {
+          console.error(walletData.error);
           return;
         }
         await updateUser(user.uid, { walletId: walletData.wallet_id });
