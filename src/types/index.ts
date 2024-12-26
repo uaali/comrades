@@ -17,3 +17,9 @@ export interface UploadFormData {
   price: number;
   tags: string[];
 }
+
+export interface UploadFormDataWithFiles extends UploadFormData {
+  publisher: string;
+  file: File | string;
+  preview: File | string;
+}

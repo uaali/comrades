@@ -6,6 +6,10 @@ import UploadPreviewFileDropzone from "../components/ui/UploadPreviewFileDropzon
 import TagsInput from "../components/sections/TagsInput";
 import { UploadFormData } from "@/types";
 import toast from "react-hot-toast";
+import { compressFiles, validateForm } from "../utils/uploadFileUtils";
+import { toBase64 } from "../utils/toBase64";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/lib/firebase/config";
 
 const baseStyle = {
   height: "200px",
@@ -27,54 +31,61 @@ const baseStyle = {
 const UploadPage = () => {
   const [files, setFiles] = useState<File[] | null>(null);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
-
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<UploadFormData>({
     title: "",
     price: 0,
     description: "",
     tags: [],
   });
-
-  const validateForm = () => {
-    if (!formData.title) {
-      toast.error("Title is required");
-      return false;
-    }
-    if (formData.price <= 9) {
-      toast.error("Price must be greater than 0");
-      return false;
-    }
-    if (!formData.description) {
-      toast.error("Description is required");
-      return false;
-    }
-    if (!files || files.length === 0) {
-      toast.error("Content files are required");
-      return false;
-    }
-    if (!previewFile) {
-      toast.error("Preview image is required");
-      return false;
-    }
-    if (formData.tags.length === 0) {
-      toast.error("At least one tag is required");
-      return false;
-    }
-    return true;
-  };
+  const [user] = useAuthState(auth);
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    if (!user) {
+      toast.error("You need to be logged in to upload content");
+      return;
+    }
+    setSubmitting(true);
+    if (!files || !previewFile) {
+      toast.error("Content file(s) and preview image are required");
+      setSubmitting(false);
+      return;
+    }
+    toast.loading("Compressing files...");
+    const compressedFile = await compressFiles(files);
+    toast.dismiss();
+    const data = {
+      ...formData,
+      publisher: user?.uid,
+      file: await toBase64(compressedFile),
+      preview: await toBase64(previewFile),
+    };
+    const validation = validateForm(data);
+    if (validation !== true) {
+      toast.error(validation);
+      setSubmitting(false);
+      return;
+    }
+
     try {
       toast.loading("Uploading content...");
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
       toast.dismiss();
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error || "Failed to upload content");
+      }
       toast.success("Content uploaded successfully!");
     } catch (error) {
       toast.dismiss();
-      toast.error("Failed to upload content");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to upload content"
+      );
     }
+    setSubmitting(false);
   };
   return (
     <div className="p-4 md:px-6 bg-background-200 text-text-50 w-full">
@@ -105,7 +116,8 @@ const UploadPage = () => {
             htmlFor="price"
             className="text-sm tracking-wide font-semibold"
           >
-            Price (Ksh) <span className="text-gray-500 font-normal">-Minimum 10</span>
+            Price (Ksh){" "}
+            <span className="text-gray-500 font-normal">-Minimum 10</span>
           </label>
           <input
             onChange={(e) =>
@@ -152,8 +164,11 @@ const UploadPage = () => {
       </div>
       <div className="w-full justify-center flex">
         <button
+          disabled={submitting}
           onClick={() => handleSubmit()}
-          className="bg-accent-200 text-lg font-bold tracking-wide text-white px-6 py-3 mt-8 mb-12 rounded-lg"
+          className={`${
+            submitting && "opacity-40"
+          } bg-accent-200 text-lg font-bold tracking-wide text-white px-6 py-3 mt-8 mb-12 rounded-lg`}
         >
           Submit
         </button>
