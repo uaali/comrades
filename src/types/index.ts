@@ -23,3 +23,9 @@ export interface UploadFormDataWithFiles extends UploadFormData {
   file: File | string;
   preview: File | string;
 }
+
+export interface UserQuota {
+  totalStorageUsed: number;
+  storageLimit: number;
+  lastPaymentDate?: Date;
+}

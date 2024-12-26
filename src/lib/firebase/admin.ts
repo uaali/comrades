@@ -9,13 +9,15 @@ if (!admin.apps.length) {
       clientEmail: process.env.AUTH_FIREBASE_CLIENT_EMAIL,
       projectId: process.env.AUTH_FIREBASE_PROJECT_ID,
     }),
+    storageBucket: process.env.AUTH_FIREBASE_STORAGE_BUCKET,
   });
 }
 
 const db = admin.firestore();
+const storage = admin.storage().bucket(process.env.AUTH_FIREBASE_STORAGE_BUCKET);
 
 //save data to firestore
-async function saveToCollection(
+async function createDocument(
   collectionName: string,
   data: any,
   docId?: string
@@ -33,4 +35,28 @@ async function saveToCollection(
   }
 }
 
-export { db,saveToCollection };
+async function getDocuments(collection: string, conditions: any[]) {
+  let query: any = db.collection(collection);
+  conditions.forEach((condition) => {
+    query = query.where(condition.field, condition.operator, condition.value);
+  });
+  const snapshot = await query.get();
+  return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+}
+
+async function updateDocument(collection: string, id: string, data: any) {
+  await db.collection(collection).doc(id).update(data);
+}
+
+async function deleteDocument(collection: string, id: string) {
+  await db.collection(collection).doc(id).delete();
+}
+
+export {
+  db,
+  storage,
+  createDocument,
+  updateDocument,
+  deleteDocument,
+  getDocuments,
+};
