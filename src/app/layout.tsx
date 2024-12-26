@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
+import { Toaster } from "react-hot-toast";
 
 const poppinsExtraBold = Poppins({
   variable: "--font-poppins",
@@ -35,8 +36,9 @@ export default function RootLayout({
       <body
         className={`${poppinsBold.variable} ${poppinsExtraBold.variable} ${inter.variable} antialiased bg-background-200`}
       >
+        <Toaster />
         <Navbar />
-        {children}
+        <main className="pb-20 md:pb-0">{children}</main>
       </body>
     </html>
   );

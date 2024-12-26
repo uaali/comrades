@@ -1,3 +1,4 @@
+import Link from "next/link";
 import React from "react";
 import { MdAdd } from "react-icons/md";
 
@@ -7,10 +8,13 @@ const UploadBanner = () => {
       <p className="text-text-50">
         Start Making <span className="text-primary-200">Money</span>
       </p>
-      <button className="bg-accent-200 text-white py-2 px-3 rounded-lg flex gap-1">
+      <Link
+        href="/upload"
+        className="bg-accent-200 text-white py-2 px-3 rounded-lg flex gap-1"
+      >
         <MdAdd className="w-5 h-5" />
         <p>Upload</p>
-      </button>
+      </Link>
     </div>
   );
 };

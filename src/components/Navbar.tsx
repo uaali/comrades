@@ -82,7 +82,7 @@ const Navbar = () => {
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 w-full bg-secondary-200 md:hidden">
+      <nav className="fixed bottom-0 left-0 w-full bg-secondary-200 md:hidden z-50 shadow-lg">
         <div className="flex justify-around items-center h-16 px-4">
           {navLinks.map((link) => (
             <Link

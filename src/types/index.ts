@@ -1,6 +1,19 @@
-export interface User{
-    uid: string;
-    displayName: string | null;
-    walletId?: string | null;
-    tokenBalance?: number | null;
+import { FileWithPath } from "react-dropzone";
+
+export interface User {
+  uid: string;
+  displayName: string | null;
+  walletId?: string | null;
+  tokenBalance?: number | null;
+}
+
+export interface ImageWithPreview extends FileWithPath {
+  preview: string;
+}
+
+export interface UploadFormData {
+  title: string;
+  description: string;
+  price: number;
+  tags: string[];
 }

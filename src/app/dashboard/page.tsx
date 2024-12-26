@@ -46,7 +46,7 @@ const Dashboard = () => {
     };
   }, [user, error]);
   return (
-    <main className="px-4 md:px-6 py-3">
+    <div className="px-4 md:px-6 py-3">
       {loading || (user && !fetchedUser && <p>Loading...</p>)}
       {!loading && !user && <p>Login please</p>}
       {!loading && fetchedUser && (
@@ -57,7 +57,7 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 };
 
