@@ -59,6 +59,8 @@ const UploadPage = () => {
       publisher: user?.uid,
       file: await toBase64(compressedFile),
       preview: await toBase64(previewFile),
+      fileMimeType: compressedFile.type,
+      previewMimeType: previewFile.type,
     };
     const validation = validateForm(data);
     if (validation !== true) {

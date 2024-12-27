@@ -1,29 +1,44 @@
-import { createDocument, db, storage } from "@/lib/firebase/admin";
+import {
+  createDocument,
+  db,
+  storage,
+  updateDocument,
+} from "@/lib/firebase/admin";
 import { UserQuota } from "@/types";
 import { getDownloadURL } from "firebase-admin/storage";
 
 const FREE_QUOTA = 1024 * 1024 * 1024; // 1GB in bytes
 const PAID_QUOTA_PRICE = 10; // 10ksh
 
-export const uploadContent = async (
-  file: Buffer,
-  previewFile: Buffer,
-  data: any
-) => {
+export const uploadContent = async ({
+  file,
+  previewFile,
+  fileMimeType,
+  previewMimeType,
+  data,
+}: {
+  file: Buffer;
+  previewFile: Buffer;
+  data: any;
+  fileMimeType: string;
+  previewMimeType: string;
+}) => {
   try {
     //upload preview file
     const contentId = db.collection("uploads").doc().id;
     const previewRef = storage.file(
       `uploads/${contentId}/preview/${crypto.randomUUID()}`
     );
-    await previewRef.save(previewFile);
+    await previewRef.save(previewFile, {
+      metadata: { contentType: previewMimeType },
+    });
     const previewUrl = await getDownloadURL(previewRef);
 
     //upload file
     const fileRef = storage.file(
       `uploads/${contentId}/full/${crypto.randomUUID()}`
     );
-    await fileRef.save(file);
+    await fileRef.save(file, { metadata: { contentType: fileMimeType } });
 
     //save data to firestore
     await createDocument(
@@ -66,6 +81,11 @@ export async function checkQuota(
     if (quotaData.totalStorageUsed + fileSize > quotaData.storageLimit) {
       return false; // Quota would be exceeded
     }
+
+    //update quota usage
+    await updateDocument("userQuotas", userId, {
+      totalStorageUsed: quotaData.totalStorageUsed + fileSize,
+    });
 
     return true; // Upload is allowed
   } catch (error) {

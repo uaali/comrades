@@ -82,14 +82,13 @@ export async function POST(request: Request) {
     }
 
     //save files to storage
-    // await uploadContent(fileBuffer, previewBuffer, {
-    //   title: data.title,
-    //   description: data.description,
-    //   price: data.price,
-    //   tags: data.tags,
-    //   publisher: data.publisher,
-    //   createdAt: Timestamp.now(),
-    // });
+    await uploadContent({
+      data,
+      previewFile: previewBuffer,
+      file: fileBuffer,
+      fileMimeType: data.fileMimeType,
+      previewMimeType: data.previewMimeType,
+    });
 
     return NextResponse.json({ message: "Success" }, { status: 200 });
   } catch (error) {

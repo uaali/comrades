@@ -5,13 +5,30 @@ import { Dropdown } from "flowbite-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MdConstruction, MdDashboard, MdExplore } from "react-icons/md";
+import {
+  MdConstruction,
+  MdDashboard,
+  MdExplore,
+  MdSearch,
+} from "react-icons/md";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
+import { useEffect, useState } from "react";
+import TypingInput from "@/app/components/ui/TypingInput";
 
 const Navbar = () => {
   const pathName = usePathname();
   const [user, loading] = useAuthState(auth);
+  const [currentPhrase, setCurrentPhrase] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const searchPhrases = [
+    "Type to search...",
+    "Search notes ...",
+    "Find by title ...",
+    "Search content ...",
+  ];
 
   const navLinks = [
     { path: "/", label: "Explore", icon: <MdExplore className="w-5 h-5" /> },
@@ -26,6 +43,37 @@ const Navbar = () => {
     { path: "/tools/report-gen", label: "Lab Report Gen" },
     { path: "/tools/docx2pdf", label: "Docx 2 PDF" },
   ];
+
+  useEffect(() => {
+    const typingSpeed = 800;
+    const deletingSpeed = 100;
+    const pauseDuration = 5000;
+
+    const animate = () => {
+      const currentText = searchPhrases[currentIndex];
+
+      if (!isDeleting) {
+        if (currentPhrase.length < currentText.length) {
+          setCurrentPhrase(currentText.slice(0, currentPhrase.length + 1));
+          return setTimeout(animate, typingSpeed);
+        }
+        setIsDeleting(true);
+        return setTimeout(animate, pauseDuration);
+      }
+
+      if (currentPhrase.length > 0) {
+        setCurrentPhrase(currentPhrase.slice(0, -1));
+        return setTimeout(animate, deletingSpeed);
+      }
+
+      setIsDeleting(false);
+      setCurrentIndex((prev) => (prev + 1) % searchPhrases.length);
+      return setTimeout(animate, typingSpeed);
+    };
+
+    const timeout = setTimeout(animate, typingSpeed);
+    return () => clearTimeout(timeout);
+  }, [currentPhrase, currentIndex, isDeleting]);
 
   return (
     <>
@@ -77,6 +125,14 @@ const Navbar = () => {
               </Dropdown.Item>
             ))}
           </Dropdown>
+        </div>
+        <div className="bg-background-200 rounded-xl flex items-center pr-2 border-primary-200 border focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all duration-200">
+          <TypingInput
+            placeholders={searchPhrases}
+            onChange={(value) => console.log(value)}
+            style="w-52 md:w-72 focus:ring-0 h-8 rounded-xl border-none p-2 outline-none bg-background-200"
+          />
+          <MdSearch className="text-accent-200 w-5 h-5" />
         </div>
         <UserMenu user={user} loading={loading} />
       </nav>

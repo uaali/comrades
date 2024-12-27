@@ -22,6 +22,8 @@ export interface UploadFormDataWithFiles extends UploadFormData {
   publisher: string;
   file: File | string;
   preview: File | string;
+  fileMimeType: string;
+  previewMimeType: string;
 }
 
 export interface UserQuota {
