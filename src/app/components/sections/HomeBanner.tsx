@@ -38,7 +38,7 @@ const HomeBanner = () => {
             className="w-[128px] h-[96px] rounded"
             alt="Docx to PDF illustration"
           />
-          <div className="text-sm bg-accent-200 rounded-xl px-3 py-1 text-white flex gap-1 items-center hover:bg-accent-300 my-1 self-end">
+          <div className="text-sm bg-accent-200 rounded-xl px-3 py-1 text-white flex gap-1 items-center hover:bg-accent-300 my-1">
             <FaGears className="w-4 h-4" />
             <p>Convert (Free)</p>
           </div>

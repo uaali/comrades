@@ -6,8 +6,8 @@ import UploadPreviewFileDropzone from "../components/ui/UploadPreviewFileDropzon
 import TagsInput from "../components/sections/TagsInput";
 import { UploadFormData } from "@/types";
 import toast from "react-hot-toast";
-import { compressFiles, validateForm } from "../utils/uploadFileUtils";
-import { toBase64 } from "../utils/toBase64";
+import { compressFiles, validateForm } from "../../utils/uploadFileUtils";
+import { toBase64 } from "../../utils/toBase64";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/lib/firebase/config";
 import CourseSelection from "../components/ui/CourseSelection";

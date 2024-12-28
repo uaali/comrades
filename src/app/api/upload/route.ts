@@ -1,6 +1,6 @@
-import { checkQuota, uploadContent } from "@/app/utils/content";
-import { getBase64Size } from "@/app/utils/getBase64Size";
-import { validateForm } from "@/app/utils/uploadFileUtils";
+import { checkQuota, uploadContent } from "@/utils/content";
+import { getBase64Size } from "@/utils/getBase64Size";
+import { validateForm } from "@/utils/uploadFileUtils";
 import { createDocument, db } from "@/lib/firebase/admin";
 import { UploadFormDataWithFiles } from "@/types";
 import { ImageAnnotatorClient } from "@google-cloud/vision";
@@ -26,7 +26,9 @@ export async function POST(request: Request) {
 
     //change files to buffer
     const previewBuffer = Buffer.from(data.preview as string, "base64");
-    const fileBuffer = Buffer.from(data.file as string, "base64");
+    const fileBuffer = Buffer.from(data.file as string, "base64")
+    const {preview, file, ...rest} = data;
+    data = rest;
 
     // //validate
     // const validation = validateForm(data);

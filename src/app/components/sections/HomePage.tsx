@@ -4,8 +4,10 @@ import ExploreNavbar from "@/components/ExploreNavbar";
 import { useState } from "react";
 import HomeBanner from "./HomeBanner";
 import UploadBanner from "./UploadBanner";
+import { Content } from "@/types";
+import ContentContainer from "./ContentContainer";
 
-const HomePage = () => {
+const HomePage = ({ content }: { content: Content[] }) => {
   const [currentCategory, setCurrentCategory] = useState("all");
   const [selectedCourse, setSelectedCourse] = useState("");
   return (
@@ -24,6 +26,8 @@ const HomePage = () => {
           <UploadBanner />
         </div>
       </div>
+      <div className="my-2 md:my-6 border-b-[1.5px] border-gray-200"></div>
+      <ContentContainer content={content} />
     </div>
   );
 };
