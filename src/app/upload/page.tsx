@@ -12,7 +12,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/lib/firebase/config";
 import CourseSelection from "../components/ui/CourseSelection";
 import { collection } from "firebase/firestore";
-import { useCollection } from "react-firebase-hooks/firestore";
+import { useCollectionOnce } from "react-firebase-hooks/firestore";
 
 const baseStyle = {
   height: "200px",
@@ -47,7 +47,7 @@ const UploadPage = () => {
   const [user] = useAuthState(auth);
   const coursesQuery = collection(db, "courses");
 
-  const [courses, loading] = useCollection(coursesQuery);
+  const [courses, loading] = useCollectionOnce(coursesQuery);
 
   const handleSubmit = async () => {
     const newFormData = { ...formData, course: selectedCourse };
@@ -175,9 +175,9 @@ const UploadPage = () => {
           </p>
           {courses && !loading ? (
             <CourseSelection
-              placeholder="Select Course"
+              placeholder="Enter course name"
               selectedCourse={selectedCourse}
-              setSelectedCourse={setSelectedCourse}
+              setSearchValue2={(searchValue) => setSelectedCourse(searchValue)}
               courses={courses.docs.map((course) => course.data().name)}
             />
           ) : (

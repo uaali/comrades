@@ -1,4 +1,3 @@
-import { Timestamp } from "firebase-admin/firestore";
 import { FileWithPath } from "react-dropzone";
 
 export interface User {
@@ -43,5 +42,5 @@ export interface Content {
   publisher: string;
   contentId: string;
   previewUrl: string;
-  createdAt: Timestamp;
+  createdAt: Date;
 }

@@ -4,8 +4,22 @@ import Image from "next/image";
 
 const ContentCard = ({ content }: { content: Content }) => {
   const { previewUrl, title, description, price } = content;
+
+  function formatDate(date: Date) {
+    const now = new Date();
+    const options: Intl.DateTimeFormatOptions = {
+      day: "numeric",
+      month: "short",
+    };
+
+    if (date.getFullYear() === now.getFullYear()) {
+      return date.toLocaleDateString("en-US", options);
+    }
+
+    return date.getFullYear().toString();
+  }
   return (
-    <div className="rounded flex-col overflow-hidden border-primary-200 border w-40 font-inter justify-between flex">
+    <div className="rounded flex-col shadow overflow-hidden border-primary-200 border w-40 font-inter justify-between flex">
       <Image
         src={previewUrl}
         width={200}
@@ -18,7 +32,10 @@ const ContentCard = ({ content }: { content: Content }) => {
           <p className="font-bold text-sm">{truncateText(title, 50)}</p>
           <p className="text-sm">{truncateText(description, 60)}</p>
         </div>
-        <p className="font-bold text-primary-200">Ksh. {price}</p>
+        <div className="flex justify-between items-center my-1">
+          <p className="font-bold text-primary-200">Ksh. {price}</p>
+          <p className="text-xs text-gray-400 font-light">{formatDate(content.createdAt)}</p>
+        </div>
       </div>
     </div>
   );

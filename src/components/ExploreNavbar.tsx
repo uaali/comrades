@@ -1,8 +1,7 @@
 import CourseSelection from "@/app/components/ui/CourseSelection";
 import { db } from "@/lib/firebase/config";
 import { collection } from "firebase/firestore";
-import { useEffect } from "react";
-import { useCollection } from "react-firebase-hooks/firestore";
+import { useCollectionOnce } from "react-firebase-hooks/firestore";
 
 interface ExploreNavbarProps {
   currentCategory: string;
@@ -18,7 +17,7 @@ const ExploreNavbar = ({
   setSelectedCourse,
 }: ExploreNavbarProps) => {
   const coursesQuery = collection(db, "courses");
-  const [courses, loading] = useCollection(coursesQuery);
+  const [courses, loading] = useCollectionOnce(coursesQuery);
   return (
     <div className="w-full md:min-w-80 font-inter my-4 md:my-0 space-y-3">
       <div className="flex gap-6 self-start items-center">
@@ -31,17 +30,17 @@ const ExploreNavbar = ({
           All
         </p>
         <p
-          onClick={() => setCurrentCategory("notes")}
+          onClick={() => setCurrentCategory("lecture notes")}
           className={`${
-            currentCategory == "notes" ? "text-primary-200" : "text-[#86858E]"
+            currentCategory == "lecture notes" ? "text-primary-200" : "text-[#86858E]"
           } text-sm font-semibold tracking-wide hover:cursor-pointer`}
         >
           Notes
         </p>
         <p
-          onClick={() => setCurrentCategory("past-papers")}
+          onClick={() => setCurrentCategory("past paper")}
           className={`${
-            currentCategory == "past-papers"
+            currentCategory == "past paper"
               ? "text-primary-200"
               : "text-[#86858E]"
           } text-sm font-semibold tracking-wide hover:cursor-pointer`}
@@ -49,9 +48,9 @@ const ExploreNavbar = ({
           Past Papers
         </p>
         <p
-          onClick={() => setCurrentCategory("study-guides")}
+          onClick={() => setCurrentCategory("study guide")}
           className={`${
-            currentCategory == "study-guides"
+            currentCategory == "study guide"
               ? "text-primary-200"
               : "text-[#86858E]"
           } text-sm font-semibold tracking-wide hover:cursor-pointer`}

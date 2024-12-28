@@ -1,9 +1,15 @@
 import { initializeApp, getApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {
+  enablePersistentCacheIndexAutoCreation,
+  getFirestore,
+  getPersistentCacheIndexManager,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  initializeFirestore,
+} from "firebase/firestore";
 
-const provider = new GoogleAuthProvider()
-
+const provider = new GoogleAuthProvider();
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_API_KEY,
@@ -16,6 +22,18 @@ const firebaseConfig = {
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-const db = getFirestore(app);
 
-export { auth, db, app,provider };
+// Initialize Firestore with persistence
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
+});
+
+//enable persistence in firestore
+const cacheIndexManager = getPersistentCacheIndexManager(db);
+if (cacheIndexManager) {
+  enablePersistentCacheIndexAutoCreation(cacheIndexManager);
+}
+
+export { auth, db, app, provider };

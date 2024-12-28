@@ -4,11 +4,9 @@ import HomePage from "./components/sections/HomePage";
 import { Content } from "@/types";
 
 const fetchContent = async () => {
-  //fetch 20 documents from firestore using admin sdk
-
   try {
     const collectionRef = db.collection("uploads");
-    const snapshot = await collectionRef.limit(3).orderBy("createdAt", "desc").get();
+    const snapshot = await collectionRef.limit(20).orderBy("createdAt", "desc").get();
     const documents = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
