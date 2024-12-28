@@ -40,7 +40,7 @@ const HomeBanner = () => {
           />
           <div className="text-sm bg-accent-200 rounded-xl px-3 py-1 text-white flex gap-1 items-center hover:bg-accent-300 my-1 self-end">
             <FaGears className="w-4 h-4" />
-            <p>Convert</p>
+            <p>Convert (Free)</p>
           </div>
         </Link>
       </div>

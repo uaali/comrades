@@ -1,11 +1,10 @@
 import { checkQuota, uploadContent } from "@/app/utils/content";
 import { getBase64Size } from "@/app/utils/getBase64Size";
 import { validateForm } from "@/app/utils/uploadFileUtils";
-import { db } from "@/lib/firebase/admin";
+import { createDocument, db } from "@/lib/firebase/admin";
 import { UploadFormDataWithFiles } from "@/types";
 import { ImageAnnotatorClient } from "@google-cloud/vision";
-import { Timestamp } from "firebase-admin/firestore";
-import { serverTimestamp } from "firebase/firestore";
+import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { isProfane } from "no-profanity";
 
@@ -19,7 +18,7 @@ const vision = new ImageAnnotatorClient({
 
 export async function POST(request: Request) {
   try {
-    const data: UploadFormDataWithFiles = await request.json();
+    let data: UploadFormDataWithFiles = await request.json();
 
     //get sizes
     const previewSize = getBase64Size(data.preview as string);
@@ -81,13 +80,25 @@ export async function POST(request: Request) {
       return NextResponse.json("Storage limit exceeded", { status: 400 });
     }
 
+    //save course
+    if (data.course !== "" && data.courseExisted === false) {
+      await createDocument(
+        "courses",
+        {
+          name: data.course,
+        },
+        createHash("sha256").update(data.course).digest("hex")
+      );
+    }
+
+    //remove courseExisted from data
+    delete data.courseExisted;
+
     //save files to storage
     await uploadContent({
       data,
       previewFile: previewBuffer,
       file: fileBuffer,
-      fileMimeType: data.fileMimeType,
-      previewMimeType: data.previewMimeType,
     });
 
     return NextResponse.json({ message: "Success" }, { status: 200 });

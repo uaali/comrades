@@ -5,6 +5,7 @@ import {
   updateDocument,
 } from "@/lib/firebase/admin";
 import { UserQuota } from "@/types";
+import { Timestamp } from "firebase-admin/firestore";
 import { getDownloadURL } from "firebase-admin/storage";
 
 const FREE_QUOTA = 1024 * 1024 * 1024; // 1GB in bytes
@@ -13,15 +14,11 @@ const PAID_QUOTA_PRICE = 10; // 10ksh
 export const uploadContent = async ({
   file,
   previewFile,
-  fileMimeType,
-  previewMimeType,
   data,
 }: {
   file: Buffer;
   previewFile: Buffer;
   data: any;
-  fileMimeType: string;
-  previewMimeType: string;
 }) => {
   try {
     //upload preview file
@@ -30,7 +27,7 @@ export const uploadContent = async ({
       `uploads/${contentId}/preview/${crypto.randomUUID()}`
     );
     await previewRef.save(previewFile, {
-      metadata: { contentType: previewMimeType },
+      metadata: { contentType: data.previewMimeType },
     });
     const previewUrl = await getDownloadURL(previewRef);
 
@@ -38,12 +35,16 @@ export const uploadContent = async ({
     const fileRef = storage.file(
       `uploads/${contentId}/full/${crypto.randomUUID()}`
     );
-    await fileRef.save(file, { metadata: { contentType: fileMimeType } });
+    await fileRef.save(file, { metadata: { contentType: data.fileMimeType } });
+
+    //remove mimeTypes
+    delete data.previewMimeType;
+    delete data.fileMimeType;
 
     //save data to firestore
     await createDocument(
       "uploads",
-      { ...data, previewUrl, fileId: contentId },
+      { ...data, previewUrl, contentId, createdAt: Timestamp.now() },
       contentId
     );
   } catch (error) {

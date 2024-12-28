@@ -9,7 +9,10 @@ import toast from "react-hot-toast";
 import { compressFiles, validateForm } from "../utils/uploadFileUtils";
 import { toBase64 } from "../utils/toBase64";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase/config";
+import { auth, db } from "@/lib/firebase/config";
+import CourseSelection from "../components/ui/CourseSelection";
+import { collection } from "firebase/firestore";
+import { useCollection } from "react-firebase-hooks/firestore";
 
 const baseStyle = {
   height: "200px",
@@ -32,15 +35,22 @@ const UploadPage = () => {
   const [files, setFiles] = useState<File[] | null>(null);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState("");
   const [formData, setFormData] = useState<UploadFormData>({
     title: "",
     price: 0,
     description: "",
+    course: "",
     tags: [],
+    courseExisted: false,
   });
   const [user] = useAuthState(auth);
+  const coursesQuery = collection(db, "courses");
+
+  const [courses, loading] = useCollection(coursesQuery);
 
   const handleSubmit = async () => {
+    const newFormData = { ...formData, course: selectedCourse };
     if (!user) {
       toast.error("You need to be logged in to upload content");
       return;
@@ -55,7 +65,7 @@ const UploadPage = () => {
     const compressedFile = await compressFiles(files);
     toast.dismiss();
     const data = {
-      ...formData,
+      ...newFormData,
       publisher: user?.uid,
       file: await toBase64(compressedFile),
       preview: await toBase64(previewFile),
@@ -147,9 +157,7 @@ const UploadPage = () => {
       </div>
       <div>
         <div className="flex flex-col gap-2 mt-5">
-          <label className="text-sm tracking-wide font-semibold">
-            Description
-          </label>
+          <p className="text-sm tracking-wide font-semibold">Description</p>
           <textarea
             maxLength={500}
             onChange={(e) =>
@@ -159,6 +167,22 @@ const UploadPage = () => {
             placeholder="Add a detailed description..."
             className="rounded-lg border-primary-500 shadow-lg p-2 min-h-[100px]"
           />
+        </div>
+        <div className="flex flex-col gap-2 mt-5">
+          <p className="text-sm tracking-wide font-semibold">
+            Select Course{" "}
+            <span className="text-gray-500 font-normal">-Recommended</span>
+          </p>
+          {courses && !loading ? (
+            <CourseSelection
+              placeholder="Select Course"
+              selectedCourse={selectedCourse}
+              setSelectedCourse={setSelectedCourse}
+              courses={courses.docs.map((course) => course.data().name)}
+            />
+          ) : (
+            <div className="p-3 bg-gray-200 rounded-lg animate-pulse"></div>
+          )}
         </div>
         <TagsInput
           setResultTags={(tags) => setFormData({ ...formData, tags: tags })}

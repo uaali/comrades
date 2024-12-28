@@ -130,7 +130,7 @@ const Navbar = () => {
           <TypingInput
             placeholders={searchPhrases}
             onChange={(value) => console.log(value)}
-            style="w-52 md:w-72 focus:ring-0 h-8 rounded-xl border-none p-2 outline-none bg-background-200"
+            style={`${user ? "w-52": "w-32"} md:w-72 focus:ring-0 h-8 rounded-xl border-none p-2 outline-none bg-background-200`}
           />
           <MdSearch className="text-accent-200 w-5 h-5" />
         </div>
