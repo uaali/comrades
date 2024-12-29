@@ -1,3 +1,4 @@
+import { Timestamp } from "firebase-admin/firestore";
 import { FileWithPath } from "react-dropzone";
 
 export interface User {
@@ -43,4 +44,17 @@ export interface Content {
   contentId: string;
   previewUrl: string;
   createdAt: Date;
+}
+
+export interface Transaction {
+  checkoutId: string | null;
+  trackingId: string | null;
+  signature: string | null;
+  userId: string;
+  contentId: string;
+  amount: number;
+  currency: string;
+  status: "pending" | "success" | "failed" | "canceled";
+  createdAt: Timestamp | Date;
+  paymentMethod: string | null;
 }

@@ -7,7 +7,7 @@ const GoogleBtn = () => {
     <div>
       <button
         onClick={async () => {
-          const res = await signInWithPopup(auth, provider);
+          await signInWithPopup(auth, provider);
         }}
         className="gsi-material-button"
       >

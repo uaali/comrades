@@ -30,10 +30,4 @@ const db = initializeFirestore(app, {
   }),
 });
 
-//enable persistence in firestore
-const cacheIndexManager = getPersistentCacheIndexManager(db);
-if (cacheIndexManager) {
-  enablePersistentCacheIndexAutoCreation(cacheIndexManager);
-}
-
 export { auth, db, app, provider };

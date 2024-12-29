@@ -27,7 +27,8 @@ async function createDocument(
     if (docId) {
       collection.doc(docId).set(data);
     } else {
-      await collection.add(data);
+      const docRef = await collection.add(data);
+      return docRef.id;
     }
   } catch (error) {
     console.error("Error saving to collection:", error);
@@ -42,6 +43,11 @@ async function getDocuments(collection: string, conditions: any[]) {
   });
   const snapshot = await query.get();
   return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
+}
+
+async function getDocument(collection: string, id: string) {
+  const doc = await db.collection(collection).doc(id).get();
+  return doc.data();
 }
 
 async function updateDocument(collection: string, id: string, data: any) {
@@ -59,4 +65,5 @@ export {
   updateDocument,
   deleteDocument,
   getDocuments,
+  getDocument,
 };

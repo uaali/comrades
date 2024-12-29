@@ -1,6 +1,7 @@
 import { Content } from "@/types";
 import { truncateText } from "@/utils/truncateText";
 import Image from "next/image";
+import Link from "next/link";
 
 const ContentCard = ({ content }: { content: Content }) => {
   const { previewUrl, title, description, price } = content;
@@ -19,7 +20,10 @@ const ContentCard = ({ content }: { content: Content }) => {
     return date.getFullYear().toString();
   }
   return (
-    <div className="rounded flex-col shadow overflow-hidden border-primary-200 border w-40 font-inter justify-between flex">
+    <Link
+      href={`/content/${content.id}`}
+      className="rounded flex-col shadow overflow-hidden border-primary-200 border w-40 font-inter justify-between flex"
+    >
       <Image
         src={previewUrl}
         width={200}
@@ -34,10 +38,12 @@ const ContentCard = ({ content }: { content: Content }) => {
         </div>
         <div className="flex justify-between items-center my-1">
           <p className="font-bold text-primary-200">Ksh. {price}</p>
-          <p className="text-xs text-gray-400 font-light">{formatDate(content.createdAt)}</p>
+          <p className="text-xs text-gray-400 font-light">
+            {formatDate(content.createdAt)}
+          </p>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
