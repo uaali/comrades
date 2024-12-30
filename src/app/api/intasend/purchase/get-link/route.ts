@@ -21,15 +21,27 @@ export async function POST(request: Request) {
     }
     const price = content.price;
 
+    //get publisher wallet id
+    const publisher = await getDocument("users", userId);
+    if (!publisher) {
+      return NextResponse.json(
+        { error: "Publisher not found" },
+        { status: 404 }
+      );
+    }
+    const walletId = publisher.walletId;
+
     //create transaction in firestore
     const transactionId = await createDocument("transactions", {
       userId,
+      walletId,
       contentId,
       amount: price,
       currency: "KES",
       status: "pending",
       createdAt: Timestamp.now(),
     });
+
     //generate checkout link
     let collection = intasend.collection();
     const response = await collection.charge({
