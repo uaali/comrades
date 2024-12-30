@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import ContentCard from "./ContentCard";
-import { collection, getDocs, limit, orderBy, query, startAfter, where } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  startAfter,
+  where,
+} from "firebase/firestore";
 import { Content } from "@/types";
 import { db } from "@/lib/firebase/config";
 
@@ -10,10 +18,10 @@ interface ContentContainerProps {
   currentCategory: string;
 }
 
-const ContentContainer = ({ 
-  content: initialContent, 
-  selectedCourse, 
-  currentCategory 
+const ContentContainer = ({
+  content: initialContent,
+  selectedCourse,
+  currentCategory,
 }: ContentContainerProps) => {
   const [content, setContent] = useState(initialContent);
   const [filteredContent, setFilteredContent] = useState(initialContent);
@@ -27,7 +35,8 @@ const ContentContainer = ({
     // Filter content based on selected filters
     const newFilteredContent = content.filter((item) => {
       const courseMatch = !selectedCourse || item.course === selectedCourse;
-      const categoryMatch = currentCategory === "all" || item.tags.includes(currentCategory);
+      const categoryMatch =
+        currentCategory === "all" || item.tags.includes(currentCategory);
       return courseMatch && categoryMatch;
     });
 
@@ -36,7 +45,7 @@ const ContentContainer = ({
 
   const loadMore = async () => {
     if (!lastVisible || loading || !hasMore) return;
-    
+
     try {
       setLoading(true);
       let baseQuery = query(
@@ -48,19 +57,26 @@ const ContentContainer = ({
 
       // Add filters based on selection
       const filters = [];
-      
+
       if (selectedCourse) {
         filters.push(where("course", "==", selectedCourse));
       }
-      
+
       if (currentCategory !== "all") {
         filters.push(where("tags", "array-contains", currentCategory));
       }
 
       // Combine base query with filters
-      const q = filters.length > 0 
-        ? query(collection(db, "uploads"), ...filters, orderBy("createdAt", "desc"), startAfter(lastVisible.createdAt), limit(20))
-        : baseQuery;
+      const q =
+        filters.length > 0
+          ? query(
+              collection(db, "uploads"),
+              ...filters,
+              orderBy("createdAt", "desc"),
+              startAfter(lastVisible.createdAt),
+              limit(20)
+            )
+          : baseQuery;
 
       const querySnapshot = await getDocs(q);
       const newContent = querySnapshot.docs.map((doc) => {
@@ -89,7 +105,11 @@ const ContentContainer = ({
   // Reset content when filters change
   useEffect(() => {
     setContent(initialContent);
-    setLastVisible(initialContent.length > 0 ? initialContent[initialContent.length - 1] : null);
+    setLastVisible(
+      initialContent.length > 0
+        ? initialContent[initialContent.length - 1]
+        : null
+    );
     setHasMore(true);
   }, [selectedCourse, currentCategory, initialContent]);
 
@@ -108,7 +128,7 @@ const ContentContainer = ({
       )}
       {hasMore && filteredContent.length > 0 && (
         <button
-          className="text-primary-200 md:my-5 mt-4 text-center w-full disabled:opacity-50 font-semibold" 
+          className="text-primary-200 md:my-5 mt-4 text-center w-full disabled:opacity-50 font-semibold"
           onClick={loadMore}
           disabled={loading || !hasMore}
         >

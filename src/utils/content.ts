@@ -23,19 +23,17 @@ export const uploadContent = async ({
   try {
     //upload preview file
     const contentId = db.collection("uploads").doc().id;
-    const previewRef = storage.file(
-      `uploads/${contentId}/preview/${crypto.randomUUID()}`
-    );
+    const previewRef = storage.file(`uploads/${contentId}/preview`);
     await previewRef.save(previewFile, {
-      metadata: { contentType: data.previewMimeType },
+      contentType: data.previewMimeType,
     });
     const previewUrl = await getDownloadURL(previewRef);
 
     //upload file
-    const fileRef = storage.file(
-      `uploads/${contentId}/full/${crypto.randomUUID()}`
-    );
-    await fileRef.save(file, { metadata: { contentType: data.fileMimeType } });
+    const fileRef = storage.file(`uploads/${contentId}/file`);
+    await fileRef.save(file, {
+      contentType: data.fileMimeType,
+    });
 
     //remove mimeTypes
     delete data.previewMimeType;
@@ -69,7 +67,7 @@ export async function checkQuota(
       await createDocument(
         "userQuotas",
         {
-          totalStorageUsed: 0,
+          totalStorageUsed: fileSize,
           storageLimit: FREE_QUOTA,
           lastPaymentDate: null,
         },

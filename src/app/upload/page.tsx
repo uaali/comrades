@@ -13,6 +13,7 @@ import { auth, db } from "@/lib/firebase/config";
 import CourseSelection from "../components/ui/CourseSelection";
 import { collection } from "firebase/firestore";
 import { useCollectionOnce } from "react-firebase-hooks/firestore";
+import { useRouter } from "next/navigation";
 
 const baseStyle = {
   height: "200px",
@@ -48,6 +49,8 @@ const UploadPage = () => {
   const coursesQuery = collection(db, "courses");
 
   const [courses, loading] = useCollectionOnce(coursesQuery);
+
+  const router = useRouter();
 
   const handleSubmit = async () => {
     const newFormData = { ...formData, course: selectedCourse };
@@ -91,13 +94,14 @@ const UploadPage = () => {
         throw new Error(error || "Failed to upload content");
       }
       toast.success("Content uploaded successfully!");
+      router.push("/dashboard");
     } catch (error) {
       toast.dismiss();
       toast.error(
         error instanceof Error ? error.message : "Failed to upload content"
       );
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
   return (
     <div className="p-4 md:px-6 bg-background-200 text-text-50 w-full">
@@ -196,7 +200,7 @@ const UploadPage = () => {
             submitting && "opacity-40"
           } bg-accent-200 text-lg font-bold tracking-wide text-white px-6 py-3 mt-8 mb-12 rounded-lg`}
         >
-          Submit
+          {submitting ? "Uploading..." : "Upload"}
         </button>
       </div>
     </div>

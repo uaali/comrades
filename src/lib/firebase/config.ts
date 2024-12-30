@@ -1,13 +1,11 @@
 import { initializeApp, getApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import {
-  enablePersistentCacheIndexAutoCreation,
-  getFirestore,
-  getPersistentCacheIndexManager,
   persistentLocalCache,
   persistentMultipleTabManager,
   initializeFirestore,
 } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const provider = new GoogleAuthProvider();
 
@@ -29,5 +27,6 @@ const db = initializeFirestore(app, {
     tabManager: persistentMultipleTabManager(),
   }),
 });
+const storage = getStorage(app)
 
-export { auth, db, app, provider };
+export { auth, db, app, provider,storage };
