@@ -70,6 +70,7 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
     if (!user) {
       toast.error("You must be logged in to purchase content");
       await signInWithPopup(auth, provider);
+      return;
     }
     setPurchasing(true);
     try {

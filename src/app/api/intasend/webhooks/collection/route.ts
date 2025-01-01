@@ -3,8 +3,8 @@ import IntaSend from "intasend-node";
 import { NextResponse } from "next/server";
 
 const APP_WALLET = "Y279PPK";
-const APP_GROW_WALLET = "Y6W8L9Y"; //tirigist
-const MY_PROFIT_WALLET = "Y5XLBGK"; //kuriamuchuni
+const APP_GROW_WALLET = "YRBXGGK"; //tirigist
+const MY_PROFIT_WALLET = "YMJLERY"; //kuriamuchuni
 const APP_GROW_PROFIT = 0.2;
 const MY_PROFIT = 0.8;
 const calculateProfit = (amount: any): number => {
