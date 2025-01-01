@@ -10,39 +10,21 @@ import { MdArrowForward } from "react-icons/md";
 const Balances = ({ user }: { user: User }) => {
   const [walletBalance, setWalletBalance] = useState<null | string>();
   const [tokenBalance, setTokenBalance] = useState<null | number>();
+  
   useEffect(() => {
-    if (user.walletId) {
-      const fetchWallet = async () => {
-        const data = await fetch("/api/intasend/get-wallet", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ id: user.walletId }),
-        });
-        const wallet = await data.json();
-        setWalletBalance(wallet.current_balance);
-      };
-      fetchWallet();
-    } else {
-      const createWallet = async () => {
-        const wallet = await fetch("/api/intasend/create-wallet", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ uid: user.uid }),
-        });
-        const walletData = await wallet.json();
-        if (walletData.error || walletData.errors?.length > 0) {
-          console.error(walletData.error || walletData.errors);
-          return;
-        }
-        await updateUser(user.uid, { walletId: walletData.wallet_id });
-        setWalletBalance(walletData.available_balance);
-      };
-      createWallet();
-    }
+    const fetchWallet = async () => {
+      const data = await fetch("/api/intasend/get-wallet", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: user.walletId }),
+      });
+      const wallet = await data.json();
+      setWalletBalance(wallet.current_balance);
+    };
+    fetchWallet();
+
     if (typeof user.tokenBalance === "number") {
       setTokenBalance(user.tokenBalance);
     } else {

@@ -27,7 +27,7 @@ let intasend = new IntaSend(
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { invoice_id, state, challenge, api_ref, charges, net_amount } = body;
+    const { invoice_id, state, challenge, api_ref, net_amount } = body;
     if (challenge !== process.env.INTASEND_WEBHOOK_CHALLENGE) {
       return NextResponse.json({ error: "Invalid challenge" }, { status: 400 });
     }
