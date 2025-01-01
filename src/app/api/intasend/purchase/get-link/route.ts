@@ -30,11 +30,13 @@ export async function POST(request: Request) {
       );
     }
     const walletId = publisher.walletId;
+    const referrer = publisher.referrer || null;
 
     //create transaction in firestore
     const transactionId = await createDocument("transactions", {
       userId,
       walletId,
+      referrer,
       contentId,
       amount: price,
       currency: "KES",

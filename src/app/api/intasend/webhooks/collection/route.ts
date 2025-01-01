@@ -27,7 +27,7 @@ async function intraTransfer(
 ) {
   // Ensure amount is rounded to 2 decimal places
   const formattedAmount = Number(amount.toFixed(2)).toString();
-  
+
   const options = {
     method: "POST",
     headers: {
@@ -46,13 +46,17 @@ async function intraTransfer(
     `https://payment.intasend.com/api/v1/wallets/${fromWalletId}/intra_transfer/`,
     options
   );
-  
+
   const responseData = await response.json();
-  
+
   if (!response.ok) {
-    throw new Error(`IntaSend transfer failed: ${response.statusText} - ${JSON.stringify(responseData)}`);
+    throw new Error(
+      `IntaSend transfer failed: ${response.statusText} - ${JSON.stringify(
+        responseData
+      )}`
+    );
   }
-  
+
   return responseData;
 }
 
@@ -85,13 +89,22 @@ export async function POST(request: Request) {
 
       // Round net_amount first to ensure consistent calculations
       const roundedNetAmount = Number(Number(net_amount).toFixed(2));
-      
+
       // Calculate all amounts with proper rounding
       const profit = calculateProfit(roundedNetAmount);
       const publisherAmount = Number((roundedNetAmount - profit).toFixed(2));
       const appGrowProfit = Number((profit * APP_GROW_PROFIT).toFixed(2));
       // Calculate myProfit as the remainder to ensure no rounding discrepancies
-      const myProfit = Number((profit - appGrowProfit).toFixed(2));
+      let myProfit = Number((profit - appGrowProfit).toFixed(2));
+
+      //referrer profit
+      if (transaction.referrer) {
+        const referrerAmount = Number((profit * 0.1).toFixed(2));
+        myProfit = Number((myProfit - referrerAmount).toFixed(2));
+        await updateDocument("users", transaction.referrer, {
+          tokenBalance: Number((referrerAmount * 10).toFixed(0)), // 10 tokens = 1 KES
+        });
+      }
 
       // Perform transfers
       await intraTransfer(
@@ -133,7 +146,7 @@ export async function POST(request: Request) {
         invoice_id,
       });
     }
-    
+
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error(error);

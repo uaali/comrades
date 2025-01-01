@@ -3,6 +3,8 @@ import { Poppins, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "react-hot-toast";
+import ReferralWrapper from "@/wrappers/ReferralWrapper";
+import { CookiesProvider } from "next-client-cookies/server";
 
 const poppinsExtraBold = Poppins({
   variable: "--font-poppins",
@@ -39,6 +41,9 @@ export default function RootLayout({
         <Toaster />
         <Navbar />
         <main className="pb-20 md:pb-0">{children}</main>
+        <CookiesProvider>
+          <ReferralWrapper />
+        </CookiesProvider>
       </body>
     </html>
   );
