@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     const price = content.price;
 
     //get publisher wallet id
-    const publisher = await getDocument("users", userId);
+    const publisher = await getDocument("users", content.publisher);
     if (!publisher) {
       return NextResponse.json(
         { error: "Publisher not found" },
@@ -30,13 +30,11 @@ export async function POST(request: Request) {
       );
     }
     const walletId = publisher.walletId;
-    const referralWalletId = publisher.referall
 
     //create transaction in firestore
     const transactionId = await createDocument("transactions", {
       userId,
       walletId,
-      referral:referralWalletId ?? null,
       contentId,
       amount: price,
       currency: "KES",
