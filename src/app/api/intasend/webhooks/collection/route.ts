@@ -99,10 +99,10 @@ export async function POST(request: Request) {
 
       //referrer profit
       if (transaction.referrer) {
-        const referrerAmount = Number((profit * 0.1).toFixed(2));
+        const referrerAmount = Number((myProfit * 0.01).toFixed(2));
         myProfit = Number((myProfit - referrerAmount).toFixed(2));
         await updateDocument("users", transaction.referrer, {
-          tokenBalance: Number((referrerAmount * 10).toFixed(0)), // 10 tokens = 1 KES
+          tokenBalance: Number((referrerAmount * 10).toFixed(1)), // 10 tokens = 1 KES
         });
       }
 
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
       await updateDocument("transactions", api_ref, {
         status: "complete",
         invoice_id,
-        charges: Number((roundedNetAmount - publisherAmount).toFixed(2)),
+        charges: Number((transaction.amount - publisherAmount).toFixed(2)),
         netAmount: publisherAmount,
       });
     } else if (state === "PROCESSING") {
