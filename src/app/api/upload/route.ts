@@ -7,6 +7,7 @@ import { ImageAnnotatorClient } from "@google-cloud/vision";
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { isProfane } from "no-profanity";
+import { revalidatePath } from "next/cache";
 
 const vision = new ImageAnnotatorClient({
   credentials: {
@@ -102,6 +103,9 @@ export async function POST(request: Request) {
       previewFile: previewBuffer,
       file: fileBuffer,
     });
+
+    revalidatePath("/");
+
 
     return NextResponse.json({ message: "Success" }, { status: 200 });
   } catch (error) {
