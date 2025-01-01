@@ -93,3 +93,5 @@ const ContentPage = async ({ params }: { params: Promise<{ id: string }> }) => {
 };
 
 export default ContentPage;
+
+export const revalidate = 60
