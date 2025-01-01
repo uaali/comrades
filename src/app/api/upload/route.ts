@@ -105,7 +105,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: "Success" }, { status: 200 });
   } catch (error) {
-    console.log("Error uploading content:", error);
+    console.error("Error uploading content:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

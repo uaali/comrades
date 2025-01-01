@@ -1,14 +1,13 @@
 import { db, getDocument, updateDocument } from "@/lib/firebase/admin";
-import IntaSend from "intasend-node";
 import { NextResponse } from "next/server";
 
 const APP_WALLET = "Y279PPK";
-const APP_GROW_WALLET = "YRBXGGK"; //tirigist
-const MY_PROFIT_WALLET = "YMJLERY"; //kuriamuchuni
+const APP_GROW_WALLET = "YRBXGGK";
+const MY_PROFIT_WALLET = "YMJLERY";
 const APP_GROW_PROFIT = 0.2;
-const MY_PROFIT = 0.8;
+
 const calculateProfit = (amount: any): number => {
-  const numAmount = Number(amount);
+  const numAmount = Number(Number(amount).toFixed(2)); // Ensure input is also rounded
   if (isNaN(numAmount)) {
     throw new Error("Amount must be convertible to a number");
   }
@@ -16,31 +15,66 @@ const calculateProfit = (amount: any): number => {
   let percentage =
     numAmount <= 100 ? 10 : numAmount <= 1000 ? 8 : numAmount <= 10000 ? 5 : 2;
 
-  return Number(((numAmount * percentage) / 100).toFixed(2));
+  // Calculate and round profit
+  return Number((numAmount * (percentage / 100)).toFixed(2));
 };
 
-let intasend = new IntaSend(
-  process.env.INTASEND_API_KEY_PUBLIC!,
-  process.env.INTASEND_API_KEY_SECRET!,
-  false
-);
+async function intraTransfer(
+  fromWalletId: string,
+  toWalletId: string,
+  amount: number,
+  narrative: string
+) {
+  // Ensure amount is rounded to 2 decimal places
+  const formattedAmount = Number(amount.toFixed(2)).toString();
+  
+  const options = {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      Authorization: `Bearer ${process.env.INTASEND_API_KEY_SECRET}`,
+    },
+    body: JSON.stringify({
+      wallet_id: toWalletId,
+      amount: formattedAmount,
+      narrative: narrative,
+    }),
+  };
+
+  const response = await fetch(
+    `https://payment.intasend.com/api/v1/wallets/${fromWalletId}/intra_transfer/`,
+    options
+  );
+  
+  const responseData = await response.json();
+  
+  if (!response.ok) {
+    throw new Error(`IntaSend transfer failed: ${response.statusText} - ${JSON.stringify(responseData)}`);
+  }
+  
+  return responseData;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { invoice_id, state, challenge, api_ref, net_amount } = body;
+
     if (challenge !== process.env.INTASEND_WEBHOOK_CHALLENGE) {
       return NextResponse.json({ error: "Invalid challenge" }, { status: 400 });
     }
-    const transaction = await getDocument("transactions", api_ref);
-    if (!transaction) {
-      return NextResponse.json(
-        { error: "Transaction not found" },
-        { status: 404 }
-      );
-    }
-    //confirm status
+
     if (state === "COMPLETE") {
-      //update content access
+      const transaction = await getDocument("transactions", api_ref);
+      if (!transaction) {
+        return NextResponse.json(
+          { error: "Transaction not found" },
+          { status: 404 }
+        );
+      }
+
+      // Update content access
       const contentRef = db.collection("uploads").doc(transaction.contentId);
       const purchaseRef = contentRef
         .collection("purchases")
@@ -49,42 +83,43 @@ export async function POST(request: Request) {
         transactionId: api_ref,
       });
 
-      const wallets = intasend.wallets();
+      // Round net_amount first to ensure consistent calculations
+      const roundedNetAmount = Number(Number(net_amount).toFixed(2));
+      
+      // Calculate all amounts with proper rounding
+      const profit = calculateProfit(roundedNetAmount);
+      const publisherAmount = Number((roundedNetAmount - profit).toFixed(2));
+      const appGrowProfit = Number((profit * APP_GROW_PROFIT).toFixed(2));
+      // Calculate myProfit as the remainder to ensure no rounding discrepancies
+      const myProfit = Number((profit - appGrowProfit).toFixed(2));
 
-      //fund wallets
-      const walletId = transaction.walletId;
-      const profit = calculateProfit(net_amount);
-      const publisherAmount = net_amount - profit;
-      const appGrowProfit = profit * APP_GROW_PROFIT;
-      const myProfit = profit * MY_PROFIT;
-      //publisher
-      await wallets.intraTransfer(
+      // Perform transfers
+      await intraTransfer(
         APP_WALLET,
-        walletId,
+        transaction.walletId,
         publisherAmount,
         `Publisher payment for ${transaction.contentId}`
       );
-      //app_grow
-      await wallets.intraTransfer(
+
+      await intraTransfer(
         APP_WALLET,
         APP_GROW_WALLET,
         appGrowProfit,
         `App grow profit for ${transaction.contentId}`
       );
 
-      //my profit
-      await wallets.intraTransfer(
+      await intraTransfer(
         APP_WALLET,
         MY_PROFIT_WALLET,
         myProfit,
         `My profit for ${transaction.contentId}`
       );
 
-      //update firestore
+      // Update firestore with rounded values
       await updateDocument("transactions", api_ref, {
         status: "complete",
         invoice_id,
-        charges: net_amount - publisherAmount,
+        charges: Number((roundedNetAmount - publisherAmount).toFixed(2)),
         netAmount: publisherAmount,
       });
     } else if (state === "PROCESSING") {
@@ -98,6 +133,7 @@ export async function POST(request: Request) {
         invoice_id,
       });
     }
+    
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error(error);

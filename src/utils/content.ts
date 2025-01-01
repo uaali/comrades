@@ -46,7 +46,7 @@ export const uploadContent = async ({
       contentId
     );
   } catch (error) {
-    console.log("Error uploading content:", error);
+    console.error("Error uploading content:", error);
     throw error;
   }
 };

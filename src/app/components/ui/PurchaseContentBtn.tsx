@@ -49,7 +49,7 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
         };
         fetchDownloadUrl();
       }
-    }
+    };
     check();
   }, [user]);
 
@@ -62,7 +62,7 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
       link.click();
       document.body.removeChild(link);
     } else {
-      console.log("Download URL not available");
+      toast.error("Error fetching download link");
     }
   };
 
