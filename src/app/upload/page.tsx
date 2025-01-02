@@ -9,11 +9,12 @@ import toast from "react-hot-toast";
 import { compressFiles, validateForm } from "../../utils/uploadFileUtils";
 import { toBase64 } from "../../utils/toBase64";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db } from "@/lib/firebase/config";
+import { auth, db, provider } from "@/lib/firebase/config";
 import CourseSelection from "../components/ui/CourseSelection";
 import { collection } from "firebase/firestore";
 import { useCollectionOnce } from "react-firebase-hooks/firestore";
 import { useRouter } from "next/navigation";
+import { signInWithPopup } from "firebase/auth";
 
 const baseStyle = {
   height: "200px",
@@ -56,6 +57,7 @@ const UploadPage = () => {
     const newFormData = { ...formData, course: selectedCourse };
     if (!user) {
       toast.error("You need to be logged in to upload content");
+      await signInWithPopup(auth, provider);
       return;
     }
     setSubmitting(true);
@@ -197,7 +199,7 @@ const UploadPage = () => {
           disabled={submitting}
           onClick={() => handleSubmit()}
           className={`${
-            submitting && "opacity-40"
+            submitting && "opacity-40 hover:cursor-wait"
           } bg-accent-200 text-lg font-bold tracking-wide text-white px-6 py-3 mt-8 mb-12 rounded-lg`}
         >
           {submitting ? "Uploading..." : "Upload"}

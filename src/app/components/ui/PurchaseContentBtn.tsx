@@ -11,47 +11,44 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import toast from "react-hot-toast";
 
 const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
-  const [purchasing, setPurchasing] = useState(false);
-  const [checkoutLink, setCheckoutLink] = useState<string | null>(null);
+  const [status, setStatus] = useState<'loading' | 'purchase' | 'purchasing' | 'download' | 'checkout'>('loading');
   const [downloadURL, setDownloadURL] = useState<string | null>(null);
-  const [user] = useAuthState(auth);
+  const [checkoutLink, setCheckoutLink] = useState<string | null>(null);
+  const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
 
-  const checkHasPurchased: () => Promise<boolean> = async () => {
-    try {
-      if (!user?.uid) return false;
-      const purchaseRef = doc(db, `uploads/${contentId}/purchases/${user.uid}`);
-      const purchaseSnap = await getDoc(purchaseRef);
-      if (purchaseSnap.exists()) {
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Error checking purchase status:", error);
-      toast.error("Error checking purchase status");
-      return false;
-    }
-  };
-
   useEffect(() => {
-    const check = async () => {
-      const checkPurchase = await checkHasPurchased();
-      //fetch content
-      if (checkPurchase) {
-        const fetchDownloadUrl = async () => {
-          try {
-            const fileRef = ref(storage, `uploads/${contentId}/file`);
-            const url = await getDownloadURL(fileRef);
-            setDownloadURL(url);
-          } catch (error) {
-            console.error("Error fetching download URL:", error);
-          }
-        };
-        fetchDownloadUrl();
+    const checkPurchaseAndGetUrl = async () => {
+      // Don't do anything while auth is loading
+      if (authLoading) return;
+      
+      // If no user, set to purchase state
+      if (!user) {
+        setStatus('purchase');
+        return;
+      }
+
+      try {
+        const purchaseRef = doc(db, `uploads/${contentId}/purchases/${user.uid}`);
+        const purchaseSnap = await getDoc(purchaseRef);
+        
+        if (purchaseSnap.exists()) {
+          const fileRef = ref(storage, `uploads/${contentId}/file`);
+          const url = await getDownloadURL(fileRef);
+          setDownloadURL(url);
+          setStatus('download');
+        } else {
+          setStatus('purchase');
+        }
+      } catch (error) {
+        console.error('Error in check:', error);
+        toast.error("Error checking content status");
+        setStatus('purchase');
       }
     };
-    check();
-  }, [user]);
+
+    checkPurchaseAndGetUrl();
+  }, [user, authLoading, contentId]);
 
   const handleDownload = () => {
     if (downloadURL) {
@@ -72,9 +69,9 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
       await signInWithPopup(auth, provider);
       return;
     }
-    setPurchasing(true);
+    setStatus('purchasing');
+    const toastId = toast.loading("Redirecting you in a few...");
     try {
-      toast.loading("Redirecting you in a few...");
       const response = await fetch("/api/intasend/purchase/get-link", {
         method: "POST",
         headers: {
@@ -87,51 +84,71 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
         throw new Error(data.errors || data.error);
       }
       setCheckoutLink(data.checkoutLink);
+      setStatus('checkout');
       router.push(data.checkoutLink);
     } catch (error) {
       toast.error("Error purchasing content");
+      setStatus('purchase');
+    } finally {
+      toast.dismiss(toastId);
     }
-    toast.dismiss();
-    setPurchasing(false);
   };
 
-  return (
-    <div>
-      {checkoutLink ? (
+  // Show loading state while auth is loading
+  if (authLoading || status === 'loading') {
+    return (
+      <button 
+        disabled 
+        className="py-3 px-8 rounded font-bold tracking-wide bg-accent-300 text-gray-400"
+      >
+        Loading...
+      </button>
+    );
+  }
+
+  switch (status) {
+    case 'purchase':
+      return (
+        <button
+          onClick={getCheckoutLink}
+          className="py-3 px-8 rounded font-bold tracking-wide text-white shadow shadow-gray-600 hover:shadow-xl hover:shadow-gray-600 transition-shadow duration-200 bg-accent-200 hover:bg-accent-300"
+        >
+          Purchase
+        </button>
+      );
+
+    case 'purchasing':
+      return (
+        <button
+          disabled
+          className="py-3 px-8 rounded font-bold tracking-wide cursor-wait bg-accent-300 text-gray-400"
+        >
+          Purchasing...
+        </button>
+      );
+
+    case 'download':
+      return (
+        <button
+          onClick={handleDownload}
+          className="py-3 px-8 rounded font-bold tracking-wide text-white shadow shadow-gray-600 hover:shadow-xl hover:shadow-gray-600 transition-shadow duration-200 bg-accent-200 hover:bg-accent-300"
+        >
+          Download
+        </button>
+      );
+
+    case 'checkout':
+      return (
         <Link
-          href={checkoutLink}
+          href={checkoutLink!}
           target="_blank"
           rel="noreferrer"
           className="text-sm text-accent-200 hover:underline"
         >
           Click here if not redirected
         </Link>
-      ) : (
-        <>
-          {!downloadURL ? (
-            <button
-              disabled={purchasing}
-              onClick={getCheckoutLink}
-              className={` py-3 px-8 rounded font-bold tracking-wide${
-                purchasing
-                  ? "cursor-wait bg-accent-300 text-gray-400"
-                  : " text-white shadow shadow-gray-600 hover:shadow-xl hover:shadow-gray-600 transition-shadow duration-200 bg-accent-200 hover:bg-accent-300"
-              }`}
-            >
-              {purchasing ? "Purchasing..." : "Purchase"}
-            </button>
-          ) : (
-            <button
-              onClick={handleDownload}
-              className="py-3 px-8 rounded font-bold tracking-wide text-white shadow shadow-gray-600 hover:shadow-xl hover:shadow-gray-600 transition-shadow duration-200 bg-accent-200 hover:bg-accent-300"
-            >
-              Download
-            </button>
-          )}
-        </>
-      )}
-    </div>
-  );
+      );
+  }
 };
 
 export default PurchaseContentBtn;
