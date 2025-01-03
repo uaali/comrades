@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth } from "@/lib/firebase/config";
 import { useRouter } from "next/navigation";
-import { MdPerson, MdReceiptLong, MdSettings } from "react-icons/md";
+import { MdNotifications, MdPerson, MdReceiptLong } from "react-icons/md";
 import GoogleBtn from "../ui/GoogleBtn";
 import { signOut } from "firebase/auth";
 
@@ -82,12 +82,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, loading }) => {
 
                 {/* Menu Items */}
                 <Link
-                  href="/settings"
+                  href="/notifications"
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   onClick={() => setIsOpen(false)}
                 >
-                  <MdSettings className="mr-2 h-4 w-4" />
-                  <p>Profile Settings</p>
+                  <MdNotifications className="mr-2 h-4 w-4" />
+                  <p>Notifications</p>
                 </Link>
                 <Link
                   href="/transactions"

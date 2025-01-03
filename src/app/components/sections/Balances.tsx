@@ -25,13 +25,7 @@ const Balances = ({ user }: { user: User }) => {
       setWalletBalance(wallet.current_balance);
     };
     fetchWallet();
-
-    if (typeof user.tokenBalance === "number") {
-      setTokenBalance(user.tokenBalance);
-    } else {
-      setTokenBalance(0);
-      updateUser(user.uid, { tokenBalance: 0 });
-    }
+    setTokenBalance(user.tokenBalance);
   }, []);
   return (
     <div className="w-1/2 md:w-1/4 font-inter flex flex-col gap-2">
@@ -59,10 +53,15 @@ const Balances = ({ user }: { user: User }) => {
 
         <div className="text-sm flex items-center flex-col gap-1">
           <p className="italic text-gray-500">Share to earn tokens</p>
-          <button onClick={()=>{
-            navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_BASE_URL}?referrer=${user.uid}`)
-            toast.success("Referral link copied")
-          }}  className="bg-accent-200 text-white px-3 py-1 rounded-lg">
+          <button
+            onClick={() => {
+              navigator.clipboard.writeText(
+                `${process.env.NEXT_PUBLIC_BASE_URL}?referrer=${user.uid}`
+              );
+              toast.success("Referral link copied");
+            }}
+            className="bg-accent-200 text-white px-3 py-1 rounded-lg"
+          >
             Copy Referral Link
           </button>
           <Link

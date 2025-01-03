@@ -38,6 +38,7 @@ exports.createUserDocument = functions
         photoURL: user.photoURL,
         createdAt: user.metadata.creationTime,
         walletId: responseData.wallet_id,
+        tokenBalance:0,
       };
 
       await db
