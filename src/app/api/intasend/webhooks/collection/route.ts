@@ -78,12 +78,14 @@ export async function POST(request: Request) {
         );
       }
 
+      const batch = db.batch();
+
       // Update content access
       const contentRef = db.collection("uploads").doc(transaction.contentId);
       const purchaseRef = contentRef
         .collection("purchases")
         .doc(transaction.userId);
-      await purchaseRef.set({
+      batch.set(purchaseRef, {
         transactionId: api_ref,
       });
 
@@ -101,8 +103,9 @@ export async function POST(request: Request) {
       if (transaction.referrer) {
         const referrerAmount = Number((myProfit * 0.01).toFixed(2));
         myProfit = Number((myProfit - referrerAmount).toFixed(2));
-        await updateDocument("users", transaction.referrer, {
-          tokenBalance: Number((referrerAmount * 10).toFixed(1)), // 10 tokens = 1 KES
+        const referrerDoc = db.collection("users").doc(transaction.referrer);
+        batch.update(referrerDoc, {
+          tokenBalance: Number((referrerAmount * 10).toFixed(1)),
         });
       }
 
@@ -129,12 +132,15 @@ export async function POST(request: Request) {
       );
 
       // Update firestore with rounded values
-      await updateDocument("transactions", api_ref, {
+      const transactionDoc = db.collection("transactions").doc(api_ref);
+      batch.update(transactionDoc, {
         status: "complete",
         invoice_id,
         charges: Number((transaction.amount - publisherAmount).toFixed(2)),
         netAmount: publisherAmount,
       });
+
+      await batch.commit();
     } else if (state === "PROCESSING") {
       await updateDocument("transactions", api_ref, {
         status: "processing",

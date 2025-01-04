@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     }
     const price = content.price;
 
-    //get publisher wallet id
+    //get publisher wallet id and referrer from firestore
     const publisher = await getDocument("users", content.publisher);
     if (!publisher) {
       return NextResponse.json(

@@ -31,10 +31,10 @@ const Balances = ({ user }: { user: User }) => {
     <div className="w-1/2 md:w-1/4 font-inter flex flex-col gap-2">
       <div className=" bg-primary-200 text-white p-4 rounded space-y-4">
         <p className="font-bold">KSH. {walletBalance}</p>
-        <button className="flex items-center gap-1 bg-accent-200 px-3 py-1 rounded-lg">
+        <Link href={`/withdraw/${user.walletId}`} className="flex items-center gap-1 bg-accent-200 px-3 py-1 rounded-lg">
           <p>Withdraw</p>
           <MdArrowForward className="w-5 h-5" />
-        </button>
+        </Link>
       </div>
       <div className="border border-primary-200 bg-background-200 w-full p-2 rounded flex flex-col gap-2">
         <div className="flex justify-between items-center">
