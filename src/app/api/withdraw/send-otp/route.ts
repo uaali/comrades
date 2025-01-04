@@ -9,11 +9,6 @@ export async function POST(request: Request) {
     const { phone, amount, userId, email, displayName } = await request.json();
 
     //validation
-    if (amount <= 15) {
-      return NextResponse.json("Amount must be greater than Ksh. 15", {
-        status: 400,
-      });
-    }
     if (!validateAndNormalizePhone(phone)) {
       return NextResponse.json("Invalid phone number", { status: 400 });
     }

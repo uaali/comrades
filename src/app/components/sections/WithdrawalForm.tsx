@@ -20,10 +20,6 @@ const WithdrawalForm = ({ walletBalance }: { walletBalance: string }) => {
       toast.error("You have insufficient funds to withdraw");
       return;
     }
-    if (amount <= 15) {
-      toast.error("Amount must be greater than Ksh. 15");
-      return;
-    }
     if (!validateAndNormalizePhone(phone)) {
       toast.error("Invalid phone number");
       return;

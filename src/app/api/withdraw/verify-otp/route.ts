@@ -1,4 +1,4 @@
-import { db } from "@/lib/firebase/admin";
+import { createDocument, db } from "@/lib/firebase/admin";
 import { NextResponse } from "next/server";
 import IntaSend from "intasend-node";
 
@@ -76,6 +76,14 @@ export async function POST(request: Request) {
         wallet_id: walletId,
       });
       await payouts.approve(response);
+
+      await createDocument("withdrawals", {
+        userId,
+        amount,
+        phone,
+        walletId,
+        createdAt: new Date(),
+      }); // Save withdrawal details to Firestore
       return NextResponse.json("Withdrawal successful", { status: 200 });
     } catch (error: any) {
       // Handle IntaSend error object
