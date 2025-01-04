@@ -82,7 +82,7 @@ const WithdrawalForm = ({ walletBalance }: { walletBalance: string }) => {
         },
         body: JSON.stringify({
           phone,
-          amount,
+          amount:Number(amount).toFixed(0),
           userId: user.uid,
           email: user.email,
           displayName: user.displayName,

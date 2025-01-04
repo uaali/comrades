@@ -47,6 +47,7 @@ export interface Content {
 }
 
 export interface Transaction {
+  id: string;
   checkoutId: string | null;
   trackingId: string | null;
   signature: string | null;
@@ -57,4 +58,17 @@ export interface Transaction {
   status: "pending" | "success" | "failed" | "canceled";
   createdAt: Timestamp | Date;
   paymentMethod: string | null;
+  referrer: string | null;
+  charges: number;
+  netAmount: number;
 }
+
+export interface Withdrawal {
+  id: string;
+  amount: number;
+  createdAt: Timestamp | Date;
+  phone: string;
+  userId: string;
+  walletId: string;
+}
+

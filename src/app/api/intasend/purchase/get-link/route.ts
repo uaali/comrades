@@ -34,6 +34,7 @@ export async function POST(request: Request) {
 
     //create transaction in firestore
     const transactionId = await createDocument("transactions", {
+      publisherId: content.publisher,
       userId,
       walletId,
       referrer,

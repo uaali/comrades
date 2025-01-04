@@ -32,7 +32,7 @@ const ReferralWrapper = () => {
         });
         cookies.remove("referrer");
       } catch (error) {
-        console.log("User not found");
+        return
       }
     };
     if (user && realReferrer) {
