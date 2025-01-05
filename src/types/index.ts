@@ -56,7 +56,7 @@ export interface Transaction {
   amount: number;
   currency: string;
   status: "pending" | "success" | "failed" | "canceled";
-  createdAt: Timestamp | Date;
+  createdAt: Date;
   paymentMethod: string | null;
   referrer: string | null;
   charges: number;
@@ -66,7 +66,7 @@ export interface Transaction {
 export interface Withdrawal {
   id: string;
   amount: number;
-  createdAt: Timestamp | Date;
+  createdAt:  Date;
   phone: string;
   userId: string;
   walletId: string;

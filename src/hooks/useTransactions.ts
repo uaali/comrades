@@ -1,5 +1,4 @@
-// hooks/useTransactions.ts
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   collection,
   query,
@@ -10,184 +9,197 @@ import {
   where,
   DocumentData,
   QueryDocumentSnapshot,
-  doc,
-  getDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Transaction, Withdrawal } from "@/types";
 
-export interface PaginatedResult<T> {
-  data: T[];
-  loading: boolean;
-  error: Error | null;
+interface PaginatedResult<T> {
+  docs: T[];
   lastDoc: QueryDocumentSnapshot<DocumentData> | null;
   hasMore: boolean;
 }
+
+const usePaginatedFirestore = <T extends { id: string }>(
+  collectionName: string,
+  pageSize: number,
+  queryConstraints: any[],
+  transform: (doc: DocumentData) => T
+) => {
+  const [data, setData] = useState<T[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+  const [lastDoc, setLastDoc] =
+    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+
+  const fetchData = async (
+    cursor?: QueryDocumentSnapshot<DocumentData>
+  ): Promise<PaginatedResult<T>> => {
+    const collectionRef = collection(db, collectionName);
+    let baseQuery = query(
+      collectionRef,
+      ...queryConstraints,
+      orderBy("createdAt", "desc"),
+      limit(pageSize)
+    );
+
+    const finalQuery = cursor
+      ? query(baseQuery, startAfter(cursor))
+      : baseQuery;
+
+    const snapshot = await getDocs(finalQuery);
+    const docs = snapshot.docs.map((doc) =>
+      transform({ ...doc.data(), id: doc.id })
+    );
+
+    return {
+      docs,
+      lastDoc: snapshot.docs[snapshot.docs.length - 1] || null,
+      hasMore: docs.length === pageSize,
+    };
+  };
+
+  const loadMore = async () => {
+    if (!hasMore || loading || !lastDoc) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const result = await fetchData(lastDoc);
+
+      setData((prev) => [...prev, ...result.docs]);
+      setLastDoc(result.lastDoc);
+      setHasMore(result.hasMore);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err
+          : new Error(`Failed to fetch ${collectionName}`)
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refresh = async () => {
+    setData([]);
+    setLastDoc(null);
+    setHasMore(true);
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const result = await fetchData();
+
+      setData(result.docs);
+      setLastDoc(result.lastDoc);
+      setHasMore(result.hasMore);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err
+          : new Error(`Failed to fetch ${collectionName}`)
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Memoize the stringified constraints to maintain stable dependencies
+  const stableQueryConstraints = useMemo(
+    () => JSON.stringify(queryConstraints),
+    [queryConstraints]
+  );
+
+  useEffect(() => {
+    let mounted = true;
+
+    const initialFetch = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const result = await fetchData();
+
+        if (mounted) {
+          setData(result.docs);
+          setLastDoc(result.lastDoc);
+          setHasMore(result.hasMore);
+        }
+      } catch (err) {
+        if (mounted) {
+          setError(
+            err instanceof Error
+              ? err
+              : new Error(`Failed to fetch ${collectionName}`)
+          );
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initialFetch();
+
+    return () => {
+      mounted = false;
+    };
+  }, [collectionName, pageSize, stableQueryConstraints]);
+
+  return { data, loading, error, hasMore, loadMore, refresh };
+};
 
 export const useTransactions = (
   pageSize: number = 10,
   userId: string | undefined,
   type: "sales" | "purchases"
-): PaginatedResult<Transaction> & { loadMore: () => Promise<void> } => {
-  const [data, setData] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [lastDoc, setLastDoc] =
-    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [hasMore, setHasMore] = useState(true);
-
-  const fetchTransactions = async (
-    cursor?: QueryDocumentSnapshot<DocumentData>
-  ) => {
-    if (!userId) return [];
-    try {
-      setLoading(true);
-
-      if (type === "purchases") {
-        // For purchases, query the transactions collection directly
-        const transactionsRef = collection(db, "transactions");
-        let q = query(
-          transactionsRef,
-          where("userId", "==", userId),
-          where("status", "==", "complete"),
-          orderBy("createdAt", "desc"),
-          limit(pageSize)
-        );
-
-        if (cursor) {
-          q = query(q, startAfter(cursor));
-        }
-
-        const snapshot = await getDocs(q);
-        const docs = snapshot.docs.map((doc) => ({
-          ...doc.data(),
-          createdAt: doc.data().createdAt.toDate(),
-          id: doc.id,
-        })) as Transaction[];
-
-        setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
-        setHasMore(docs.length === pageSize);
-
-        return docs;
-      } else {
-        if (type === "sales") {
-          const transactionsRef = collection(db, "transactions");
-          let q = query(
-            transactionsRef,
-            where("publisherId", "==", userId),
+) => {
+  const queryConstraints = useMemo(
+    () =>
+      userId
+        ? [
+            where(type === "sales" ? "publisherId" : "userId", "==", userId),
             where("status", "==", "complete"),
-            orderBy("createdAt", "desc"),
-            limit(pageSize)
-          );
+          ]
+        : [],
+    [userId, type]
+  );
 
-          if (cursor) {
-            q = query(q, startAfter(cursor));
-          }
-
-          const snapshot = await getDocs(q);
-          const docs = snapshot.docs.map((doc) => ({
-            ...doc.data(),
-            createdAt: doc.data().createdAt.toDate(),
-            id: doc.id,
-          })) as Transaction[];
-
-          setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
-          setHasMore(docs.length === pageSize);
-
-          return docs;
-        }
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error("Failed to fetch transactions")
-      );
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMore = async () => {
-    if (!hasMore || loading) return;
-    const newDocs = await fetchTransactions(lastDoc || undefined);
-    setData((prev) => [...prev, ...(newDocs || [])]);
-  };
-
-  useEffect(() => {
-    const initialFetch = async () => {
-      const initialDocs = await fetchTransactions();
-      setData(initialDocs || []);
-    };
-    initialFetch();
-  }, [userId, type]);
-
-  return { data, loading, error, lastDoc, hasMore, loadMore };
+  return usePaginatedFirestore<Transaction>(
+    "transactions",
+    pageSize,
+    queryConstraints,
+    (data) =>
+      ({
+        ...data,
+        createdAt: data.createdAt.toDate(),
+      } as Transaction)
+  );
 };
 
 export const useWithdrawals = (
   pageSize: number = 10,
   userId: string | undefined
-): PaginatedResult<Withdrawal> & { loadMore: () => Promise<void> } => {
-  const [data, setData] = useState<Withdrawal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [lastDoc, setLastDoc] =
-    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
-  const [hasMore, setHasMore] = useState(true);
+) => {
+  const queryConstraints = useMemo(
+    () => (userId ? [where("userId", "==", userId)] : []),
+    [userId]
+  );
 
-  const fetchWithdrawals = async (
-    cursor?: QueryDocumentSnapshot<DocumentData>
-  ) => {
-    if (!userId) return [];
-    try {
-      setLoading(true);
-      const withdrawalsRef = collection(db, "withdrawals");
-
-      let q = query(
-        withdrawalsRef,
-        where("userId", "==", userId),
-        orderBy("createdAt", "desc"),
-        limit(pageSize)
-      );
-
-      if (cursor) {
-        q = query(q, startAfter(cursor));
-      }
-
-      const snapshot = await getDocs(q);
-      const docs = snapshot.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-        createdAt: doc.data().createdAt.toDate(),
-      })) as Withdrawal[];
-
-      setLastDoc(snapshot.docs[snapshot.docs.length - 1] || null);
-      setHasMore(docs.length === pageSize);
-
-      return docs;
-    } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error("Failed to fetch withdrawals")
-      );
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadMore = async () => {
-    if (!hasMore || loading) return;
-    const newDocs = await fetchWithdrawals(lastDoc || undefined);
-    setData((prev) => [...prev, ...newDocs]);
-  };
-
-  useEffect(() => {
-    const initialFetch = async () => {
-      const initialDocs = await fetchWithdrawals();
-      setData(initialDocs);
-    };
-    initialFetch();
-  }, [userId]);
-
-  return { data, loading, error, lastDoc, hasMore, loadMore };
+  return usePaginatedFirestore<Withdrawal>(
+    "withdrawals",
+    pageSize,
+    queryConstraints,
+    (data) =>
+      ({
+        ...data,
+        createdAt: data.createdAt.toDate(),
+      } as Withdrawal)
+  );
 };
+
+export default usePaginatedFirestore;

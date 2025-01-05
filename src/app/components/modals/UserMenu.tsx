@@ -90,7 +90,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, loading }) => {
                   <p>Notifications</p>
                 </Link>
                 <Link
-                  href="/transactions"
+                  href="/profile/transactions"
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   onClick={() => setIsOpen(false)}
                 >

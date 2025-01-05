@@ -1,87 +1,124 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Button, Spinner } from "flowbite-react";
 import { useTransactions, useWithdrawals } from "@/hooks/useTransactions";
 import { Transaction, Withdrawal } from "@/types";
-import { MdMoney, MdCreditCard } from "react-icons/md";
+import { MdCreditCard, MdMonetizationOn } from "react-icons/md";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import Link from "next/link";
+
+interface TableProps {
+  loading: boolean;
+  error: Error | null;
+  hasMore: boolean;
+  loadMore: () => void;
+}
 
 const TransactionTable = ({
   transactions,
   type,
   title,
   icon: Icon,
+  loading,
+  error,
+  hasMore,
+  loadMore,
 }: {
   transactions: Transaction[];
   type: "sales" | "purchases";
   title: string;
   icon: React.ComponentType<{ size: number; className: string }>;
-}) => (
-  <div className="bg-background-300 rounded-xl shadow-lg overflow-hidden mb-8">
-    <div className="p-4 border-b border-secondary-100">
-      <div className="flex items-center">
-        <Icon size={24} className="text-primary-200 mr-2" />
-        <h2 className="text-xl font-poppinsB text-text-50">{title}</h2>
+} & TableProps) => {
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadMore]);
+
+  if (error) {
+    return <ErrorState message={error.message} />;
+  }
+
+  return (
+    <div className="bg-background-300 rounded-xl shadow-lg overflow-hidden mb-8">
+      <div className="p-4 border-b border-secondary-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Icon size={24} className="text-primary-200 mr-2" />
+            <h2 className="text-xl font-poppinsB text-text-50">{title}</h2>
+          </div>
+          {loading && <Spinner size="sm" />}
+        </div>
       </div>
-    </div>
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm text-left">
-        <thead className="text-text-400 bg-background-50">
-          <tr>
-            <th className="px-4 py-3 font-poppins">Date</th>
-            <th className="px-4 py-3 font-poppins">Content</th>
-            <th className="px-4 py-3 font-poppins">Amount</th>
-            {type === "sales" && (
-              <>
-                <th className="px-4 py-3 font-poppins">Charges</th>
-                <th className="px-4 py-3 font-poppins">Net Amount</th>
-              </>
-            )}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-secondary-100">
-          {transactions.map((transaction) => (
-            <tr
-              key={transaction.id}
-              className="bg-background-100 hover:bg-background-50 transition-colors"
-            >
-              <td className="px-4 py-3 whitespace-nowrap">
-                {("toDate" in transaction.createdAt
-                  ? transaction.createdAt.toDate()
-                  : transaction.createdAt
-                ).toLocaleDateString()}
-              </td>
-              <td className="px-4 py-3">
-                <Link
-                  href={`/content/${transaction.contentId}`}
-                  className="text-primary-200 hover:text-primary-300 hover:underline"
-                >
-                  View
-                </Link>
-              </td>
-              <td className="px-4 py-3 font-poppinsB text-primary-200">
-                {transaction.amount} {transaction.currency}
-              </td>
+      <div className="overflow-x-auto overflow-y-auto max-h-96">
+        <table className="w-full text-sm text-left">
+          <thead className="text-text-400 bg-background-50">
+            <tr>
+              <th className="px-4 py-3 font-poppins">Date</th>
+              <th className="px-4 py-3 font-poppins">Content</th>
+              <th className="px-4 py-3 font-poppins">Amount</th>
               {type === "sales" && (
                 <>
-                  <td className="px-4 py-3 text-text-400">
-                    {transaction.charges}
-                  </td>
-                  <td className="px-4 py-3 font-medium">
-                    {transaction.netAmount}
-                  </td>
+                  <th className="px-4 py-3 font-poppins">Charges</th>
+                  <th className="px-4 py-3 font-poppins">Net Amount</th>
                 </>
               )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-secondary-100">
+            {transactions.map((transaction) => (
+              <tr
+                key={transaction.id}
+                className="bg-background-100 hover:bg-background-50 transition-colors"
+              >
+                <td className="px-4 py-3 whitespace-nowrap">
+                  {transaction.createdAt.toLocaleDateString()}
+                </td>
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/content/${transaction.contentId}`}
+                    className="text-primary-200 hover:text-primary-300 hover:underline"
+                  >
+                    View
+                  </Link>
+                </td>
+                <td className="px-4 py-3 font-poppinsB text-primary-200">
+                  {transaction.amount} {transaction.currency}
+                </td>
+                {type === "sales" && (
+                  <>
+                    <td className="px-4 py-3 text-text-400">
+                      {transaction.charges}
+                    </td>
+                    <td className="px-4 py-3 font-medium">
+                      {transaction.netAmount}
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {hasMore && <div ref={loadMoreRef} className="h-10" />}
     </div>
-  </div>
-);
+  );
+};
 
 const WithdrawalsTable = ({
   withdrawals,
@@ -91,60 +128,71 @@ const WithdrawalsTable = ({
   loadMore,
 }: {
   withdrawals: Withdrawal[];
-  loading: boolean;
-  error: Error | null;
-  hasMore: boolean;
-  loadMore: () => void;
-}) => (
-  <div className="bg-background-300 rounded-xl shadow-lg overflow-hidden">
-    <div className="p-4 border-b border-secondary-100">
-      <h2 className="text-xl font-poppinsB text-text-50">Withdrawals History</h2>
-    </div>
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm text-left">
-        <thead className="text-text-400 bg-background-50">
-          <tr>
-            <th className="px-4 py-3 font-poppins">Date</th>
-            <th className="px-4 py-3 font-poppins">Amount</th>
-            <th className="px-4 py-3 font-poppins">Phone</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-secondary-100">
-          {withdrawals.map((withdrawal) => (
-            <tr
-              key={withdrawal.userId}
-              className="bg-background-100 hover:bg-background-50 transition-colors"
-            >
-              <td className="px-4 py-3 whitespace-nowrap">
-                {("toDate" in withdrawal.createdAt
-                  ? withdrawal.createdAt.toDate()
-                  : withdrawal.createdAt
-                ).toLocaleDateString()}
-              </td>
-              <td className="px-4 py-3 font-poppinsB text-primary-200">
-                {withdrawal.amount}
-              </td>
-              <td className="px-4 py-3">{withdrawal.phone}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-    {hasMore && (
-      <div className="text-center p-4">
-        <Button
-          color="gray"
-          size="sm"
-          disabled={loading}
-          onClick={loadMore}
-          className="text-text-50 bg-background-50 hover:bg-background-100"
-        >
-          {loading ? <Spinner size="sm" /> : "Load More"}
-        </Button>
+} & TableProps) => {
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadMore]);
+
+  if (error) {
+    return <ErrorState message={error.message} />;
+  }
+
+  return (
+    <div className="bg-background-300 rounded-xl shadow-lg overflow-hidden">
+      <div className="p-4 border-b border-secondary-100">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-poppinsB text-text-50">
+            Withdrawals History
+          </h2>
+          {loading && <Spinner size="sm" />}
+        </div>
       </div>
-    )}
-  </div>
-);
+      <div className="overflow-x-auto overflow-y-auto max-h-96">
+        <table className="w-full text-sm text-left">
+          <thead className="text-text-400 bg-background-50">
+            <tr>
+              <th className="px-4 py-3 font-poppins">Date</th>
+              <th className="px-4 py-3 font-poppins">Amount</th>
+              <th className="px-4 py-3 font-poppins">Phone</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-secondary-100">
+            {withdrawals.map((withdrawal) => (
+              <tr
+                key={withdrawal.id}
+                className="bg-background-100 hover:bg-background-50 transition-colors"
+              >
+                <td className="px-4 py-3 whitespace-nowrap">
+                  {withdrawal.createdAt.toLocaleDateString()}
+                </td>
+                <td className="px-4 py-3 font-poppinsB text-primary-200">
+                  {withdrawal.amount}
+                </td>
+                <td className="px-4 py-3">{withdrawal.phone}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {hasMore && <div ref={loadMoreRef} className="h-10" />}
+    </div>
+  );
+};
 
 const LoadingState = () => (
   <div className="flex justify-center items-center py-8">
@@ -208,36 +256,38 @@ const Transactions: React.FC = () => {
       {/* Sales Section */}
       {salesLoading && !salesData.length ? (
         <LoadingState />
-      ) : salesError ? (
-        <ErrorState message={salesError.message} />
       ) : (
         <TransactionTable
           transactions={salesData}
           type="sales"
           title="Sales History"
-          icon={MdMoney}
+          icon={MdMonetizationOn}
+          loading={salesLoading}
+          error={salesError}
+          hasMore={hasMoreSales}
+          loadMore={loadMoreSales}
         />
       )}
 
       {/* Purchases Section */}
       {purchasesLoading && !purchasesData.length ? (
         <LoadingState />
-      ) : purchasesError ? (
-        <ErrorState message={purchasesError.message} />
       ) : (
         <TransactionTable
           transactions={purchasesData}
           type="purchases"
           title="Purchase History"
           icon={MdCreditCard}
+          loading={purchasesLoading}
+          error={purchasesError}
+          hasMore={hasMorePurchases}
+          loadMore={loadMorePurchases}
         />
       )}
 
       {/* Withdrawals Section */}
       {withdrawalsLoading && !withdrawalsData.length ? (
         <LoadingState />
-      ) : withdrawalsError ? (
-        <ErrorState message={withdrawalsError.message} />
       ) : (
         <WithdrawalsTable
           withdrawals={withdrawalsData}
