@@ -66,9 +66,13 @@ export interface Transaction {
 export interface Withdrawal {
   id: string;
   amount: number;
-  createdAt:  Date;
+  createdAt: Date;
   phone: string;
   userId: string;
   walletId: string;
 }
 
+export interface SearchHit {
+  title: string;
+  objectID: string;
+}

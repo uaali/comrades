@@ -5,16 +5,11 @@ import { Dropdown } from "flowbite-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  MdConstruction,
-  MdDashboard,
-  MdExplore,
-  MdSearch,
-} from "react-icons/md";
+import { MdConstruction, MdDashboard, MdExplore } from "react-icons/md";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase/config";
 import { useEffect, useState } from "react";
-import TypingInput from "@/app/components/ui/TypingInput";
+import SearchBar from "@/app/components/ui/SearchBar";
 
 const Navbar = () => {
   const pathName = usePathname();
@@ -126,14 +121,7 @@ const Navbar = () => {
             ))}
           </Dropdown>
         </div>
-        <div className="bg-background-200 rounded-xl flex items-center pr-2 border-primary-200 border focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all duration-200">
-          <TypingInput
-            placeholders={searchPhrases}
-            onChange={(value) => console.log(value)}
-            style={`${user ? "w-52": "w-32"} md:w-72 focus:ring-0 h-8 rounded-xl border-none p-2 outline-none bg-background-200`}
-          />
-          <MdSearch className="text-accent-200 w-5 h-5" />
-        </div>
+        <SearchBar userId={user?.uid} searchPhrases={searchPhrases} />
         <UserMenu user={user} loading={loading} />
       </nav>
 
