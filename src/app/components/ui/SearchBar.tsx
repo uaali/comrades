@@ -77,16 +77,32 @@ const SearchBar = ({
     }
   }, [query]);
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && query.trim().length > 0) {
+      setQuery("");
+      router.push(`/search/${query}`);
+    }
+  };
+
   return (
     <div className="relative">
       <TypingInput
+        handleKeyDown={handleKeyDown}
         placeholders={searchPhrases}
         onChange={(e) => setQuery(e)}
         style={`${
           userId ? "w-52" : "w-32"
         } md:w-72 focus:ring-0 h-8 rounded-xl border-none p-2 outline-none bg-background-200`}
       />
-      <MdSearch className="text-accent-200 w-5 h-5 absolute right-2 top-1/2 transform -translate-y-1/2" />
+      <MdSearch
+        onClick={() => {
+          if (query.trim().length > 0) {
+            setQuery("");
+            router.push(`/search/${query}`);
+          }
+        }}
+        className="text-accent-200 w-5 h-5 absolute right-2 top-1/2 transform -translate-y-1/2 hover:cursor-pointer"
+      />
       {loading && (
         <div className="absolute left-0 w-full bg-white z-10 mt-2 p-2">
           Loading...

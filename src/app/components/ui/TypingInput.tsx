@@ -4,9 +4,15 @@ interface TypingInputProps {
   style: string;
   onChange: (value: string) => void;
   placeholders: string[];
+  handleKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
-const TypingInput = ({ style, onChange, placeholders }: TypingInputProps) => {
+const TypingInput = ({
+  style,
+  onChange,
+  placeholders,
+  handleKeyDown,
+}: TypingInputProps) => {
   const [currentText, setCurrentText] = useState("");
   const [index, setIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(true);
@@ -50,6 +56,7 @@ const TypingInput = ({ style, onChange, placeholders }: TypingInputProps) => {
       placeholder={currentText}
       onChange={(e) => onChange?.(e.target.value)}
       className={style}
+      onKeyDown={handleKeyDown}
     />
   );
 };

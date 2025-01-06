@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import ContentCard from "./ContentCard";
 import {
@@ -16,12 +18,14 @@ interface ContentContainerProps {
   content: Content[];
   selectedCourse: string;
   currentCategory: string;
+ enableLoadMore?: boolean;
 }
 
 const ContentContainer = ({
   content: initialContent,
   selectedCourse,
   currentCategory,
+  enableLoadMore = true,
 }: ContentContainerProps) => {
   const [content, setContent] = useState(initialContent);
   const [filteredContent, setFilteredContent] = useState(initialContent);
@@ -126,7 +130,7 @@ const ContentContainer = ({
           ))}
         </div>
       )}
-      {hasMore && filteredContent.length > 0 && (
+      {hasMore && enableLoadMore && filteredContent.length > 0 && (
         <button
           className="text-primary-200 md:my-5 mt-4 text-center w-full disabled:opacity-50 font-semibold"
           onClick={loadMore}
