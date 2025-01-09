@@ -76,7 +76,7 @@ const Navbar = () => {
       <nav className="bg-secondary-200 md:px-6 p-4 items-center justify-between font-inter flex">
         <Link href="/">
           <Image
-            src="/logo-blue-svg.svg"
+            src="/logo.svg"
             alt="Logo"
             width={40}
             height={40}
