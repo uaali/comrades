@@ -1,187 +1,225 @@
 "use client";
 
 import { auth, db } from "@/lib/firebase/config";
-import { doc, getDoc, collection, query, where, getDocs, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, collection, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { MdCheck, MdPerson, MdSwapHoriz } from "react-icons/md";
 import ProfilePicModal from "../modals/ProfilePicModal";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
+import LoadingUser from "../ui/LoadingUser";
 
-export default function FavouriteUser({
-  publisherId,
-}: {
-  publisherId: string;
-}) {
-  const [selectedImage, setSelectedImage] = useState<null | string>();
-  const [favouriteName, setFavouriteName] = useState<string>("");
-  const [favourited, setFavourited] = useState<boolean | null>();
-  const [profilePicModalOpen, setProfilePicModalOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [favouriteId, setFavouriteId] = useState<string | null>(null);
-  const [user] = useAuthState(auth);
+// Loading component with skeleton animation
+
+export default function FavoriteUser({ publisherId }: { publisherId: string }) {
+  const [state, setState] = useState({
+    selectedImage: "1",
+    favoriteName: "",
+    favorited: null as boolean | null,
+    profilePicModalOpen: false,
+    saving: false,
+    favoriteId: null as string | null,
+    error: null as string | null,
+  });
+
+  const [user, userLoading] = useAuthState(auth);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || userLoading) return;
 
-    const fetchFavourite = async () => {
-      // Query the favourites subcollection for this publisher
-      const favouritesRef = collection(db, `users/${user.uid}/favourites`);
-      const q = query(favouritesRef, where("id", "==", publisherId));
-      const querySnapshot = await getDocs(q);
-
-      if (!querySnapshot.empty) {
-        const favouriteDoc = querySnapshot.docs[0];
-        const favouriteData = favouriteDoc.data();
-        setSelectedImage(favouriteData.image);
-        setFavouriteName(favouriteData.name);
-        setFavourited(true);
-        setFavouriteId(favouriteDoc.id);
-      } else {
-        setFavourited(false);
-        setSelectedImage("1");
+    const fetchFavorite = async () => {
+      try {
+        const favouriteRef = doc(
+          db,
+          `users/${user.uid}/favourites`,
+          publisherId
+        );
+        const favouriteDoc = await getDoc(favouriteRef);
+        if (favouriteDoc.exists()) {
+          const favoriteData = favouriteDoc.data();
+          setState((prev) => ({
+            ...prev,
+            selectedImage: favoriteData.image,
+            favoriteName: favoriteData.name,
+            favorited: true,
+            favoriteId: favouriteDoc.id,
+          }));
+        } else {
+          setState((prev) => ({ ...prev, favorited: false }));
+        }
+      } catch (error) {
+        console.error("Error fetching favorite:", error);
+        setState((prev) => ({
+          ...prev,
+          error: "Failed to load favorite status",
+        }));
       }
     };
 
-    fetchFavourite();
-  }, [user, publisherId]);
+    fetchFavorite();
+  }, [user, userLoading, publisherId]);
 
-  const saveFavourite = async () => {
+  const handleSave = async () => {
     if (!user) return;
-    
-    setSaving(true);
-    
-    if (favouriteName === "") {
-      toast.error("Please give me a name you like");
-      setSaving(false);
+
+    setState((prev) => ({ ...prev, saving: true }));
+
+    if (state.favoriteName.trim() === "") {
+      toast.error("Please enter a name");
+      setState((prev) => ({ ...prev, saving: false }));
+      return;
+    }
+
+    if (state.favoriteName.length > 10) {
+      toast.error("Name must be 10 characters or less");
+      setState((prev) => ({ ...prev, saving: false }));
       return;
     }
 
     try {
-      // Create a new document in the favourites subcollection
       const favouritesRef = collection(db, `users/${user.uid}/favourites`);
-      const newFavouriteRef = doc(favouritesRef); // Let Firestore generate the ID
+      const newFavoriteRef = doc(favouritesRef, publisherId);
 
-      await setDoc(newFavouriteRef, {
+      await setDoc(newFavoriteRef, {
         id: publisherId,
-        name: favouriteName,
-        image: selectedImage,
+        name: state.favoriteName,
+        image: state.selectedImage,
       });
 
-      toast.success("Favourite saved successfully!");
-      setFavourited(true);
-      setFavouriteId(newFavouriteRef.id);
+      toast.success("Added to favourites!");
+      setState((prev) => ({
+        ...prev,
+        favorited: true,
+        favoriteId: newFavoriteRef.id,
+        saving: false,
+      }));
     } catch (error) {
-      toast.error("Failed to save favourite");
-      console.error("Error saving favourite:", error);
+      toast.error("Failed to save to favourites");
+      setState((prev) => ({
+        ...prev,
+        saving: false,
+        error: "Failed to save favorite",
+      }));
     }
-
-    setSaving(false);
   };
 
-  const removeFavourite = async () => {
-    if (!user || !favouriteId) return;
+  const handleRemove = async () => {
+    if (!user || !state.favoriteId) return;
 
-    setSaving(true);
+    setState((prev) => ({ ...prev, saving: true }));
     try {
-      await deleteDoc(doc(db, `users/${user.uid}/favourites/${favouriteId}`));
-      toast.success("Favourite removed successfully!");
-      setFavourited(false);
-      setFavouriteId(null);
-      setFavouriteName("");
+      await deleteDoc(
+        doc(db, `users/${user.uid}/favourites/${state.favoriteId}`)
+      );
+      toast.success("Removed from favourites");
+      setState((prev) => ({
+        ...prev,
+        favorited: false,
+        favoriteId: null,
+        favoriteName: "",
+        saving: false,
+      }));
     } catch (error) {
-      toast.error("Failed to remove favourite");
-      console.error("Error removing favourite:", error);
+      toast.error("Failed to remove from favourites");
+      setState((prev) => ({
+        ...prev,
+        saving: false,
+        error: "Failed to remove favorite",
+      }));
     }
-    setSaving(false);
   };
+
+  if (!user) return null;
+  if (userLoading || state.favorited === null) return <LoadingUser />;
+  if (state.error) {
+    return <div className="text-red-500">{state.error}</div>;
+  }
 
   return (
     <div className="my-2">
-      {profilePicModalOpen && selectedImage && (
+      {state.profilePicModalOpen && state.selectedImage && (
         <ProfilePicModal
-          openModal={profilePicModalOpen}
-          setOpenModal={setProfilePicModalOpen}
-          selectedImage={selectedImage}
-          setSelectedImage={setSelectedImage}
+          openModal={state.profilePicModalOpen}
+          setOpenModal={(open) =>
+            setState((prev) => ({ ...prev, profilePicModalOpen: open }))
+          }
+          selectedImage={state.selectedImage}
+          setSelectedImage={(image) =>
+            setState((prev) => ({ ...prev, selectedImage: image }))
+          }
         />
       )}
-      {user && (
-        <>
-          <p className="font-bold font-poppins">
-            {favourited ? "Your favourite" : "Add to favourite"}
-          </p>
-          {favourited === null ? (
-            <p>Loading ...</p>
-          ) : (
-            <>
-              {favourited ? (
-                <div className="">
-                  <Image
-                    height={48}
-                    width={48}
-                    alt="profile-pic"
-                    className="rounded-full w-12 h-12 border border-primary-200"
-                    src={`/profile_icons/${selectedImage}.svg`}
-                  />
-                  <p>{favouriteName}</p>
-                  <button
-                    onClick={removeFavourite}
-                    disabled={saving}
-                    className="text-red-500 text-sm mt-2"
-                  >
-                    {saving ? "Removing..." : "Remove from favourites"}
-                  </button>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between md:justify-start gap-4 md:gap-8 flex-wrap font-inter">
-                  <input
-                    type="text"
-                    className="rounded-lg border w-full placeholder:text-sm md:w-1/4"
-                    placeholder="Give me a name you like"
-                    value={favouriteName}
-                    onChange={(e) => setFavouriteName(e.target.value)}
-                  />
-                  <div className="">
-                    {selectedImage ? (
-                      <div className="flex items-center justify-center gap-2 flex-col">
-                        <Image
-                          alt="profile-pic"
-                          height={48}
-                          width={48}
-                          className="rounded-full w-12 h-12 border border-primary-200"
-                          src={`/profile_icons/${selectedImage}.svg`}
-                        />
-                        <button
-                          onClick={() => setProfilePicModalOpen(true)}
-                          className="flex items-center gap-2 text-white bg-gray-500 py-1 text-sm font-bold tracking-wide px-2 rounded-lg"
-                        >
-                          <MdSwapHoriz />
-                          <p>Change</p>
-                        </button>
-                      </div>
-                    ) : (
-                      <MdPerson className="text-4xl text-gray-500" />
-                    )}
-                  </div>
-                  <button
-                    disabled={saving}
-                    onClick={saveFavourite}
-                    className={`flex items-center text-white gap-2 ${
-                      saving
-                        ? "bg-accent-300 hover:cursor-not-allowed"
-                        : "bg-accent-200"
-                    } py-1 font-bold tracking-wide px-2 rounded-lg`}
-                  >
-                    <MdCheck className="w-5 h-5" />
-                    <p>{saving ? "Saving ..." : "Save"}</p>
-                  </button>
-                </div>
-              )}
-            </>
-          )}
-        </>
+
+      <h2 className="font-bold font-poppins mb-4">
+        {state.favorited ? "Your favorite" : "Add to favourites"}
+      </h2>
+
+      {state.favorited ? (
+        <div className="flex flex-col justify-center items-center">
+          <Image
+            height={48}
+            width={48}
+            alt="profile picture"
+            className="rounded-full w-12 h-12 border border-primary-200"
+            src={`/profile_icons/${state.selectedImage}.svg`}
+          />
+          <p className="font-medium">{state.favoriteName}</p>
+          <button
+            onClick={handleRemove}
+            disabled={state.saving}
+            className="text-red-500 text-sm w-min hover:text-red-600 transition-colors disabled:opacity-50"
+          >
+            {state.saving ? "Removing..." : "Remove"}
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between md:justify-start gap-4 md:gap-8 flex-wrap font-inter">
+          <input
+            type="text"
+            className="rounded-lg border w-full md:w-1/4 p-2 focus:outline-none focus:ring-2 focus:ring-accent-200"
+            placeholder="Enter a name (max 10 chars)"
+            value={state.favoriteName}
+            onChange={(e) =>
+              setState((prev) => ({ ...prev, favoriteName: e.target.value }))
+            }
+            maxLength={10}
+          />
+
+          <div className="flex flex-col items-center gap-2">
+            {state.selectedImage ? (
+              <>
+                <Image
+                  alt="profile picture"
+                  height={48}
+                  width={48}
+                  className="rounded-full w-12 h-12 border border-primary-200"
+                  src={`/profile_icons/${state.selectedImage}.svg`}
+                />
+                <button
+                  onClick={() =>
+                    setState((prev) => ({ ...prev, profilePicModalOpen: true }))
+                  }
+                  className="flex items-center gap-2 text-white bg-gray-500 hover:bg-gray-600 py-1 px-3 text-sm font-bold tracking-wide rounded-lg transition-colors"
+                >
+                  <MdSwapHoriz />
+                  <span>Change</span>
+                </button>
+              </>
+            ) : (
+              <MdPerson className="text-4xl text-gray-500" />
+            )}
+          </div>
+
+          <button
+            disabled={state.saving}
+            onClick={handleSave}
+            className="flex items-center text-white gap-2 bg-accent-200 hover:bg-accent-300 disabled:bg-accent-300 disabled:cursor-not-allowed py-2 px-4 font-bold tracking-wide rounded-lg transition-colors"
+          >
+            <MdCheck className="w-5 h-5" />
+            <span>{state.saving ? "Saving..." : "Save"}</span>
+          </button>
+        </div>
       )}
     </div>
   );

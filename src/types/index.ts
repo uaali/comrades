@@ -76,3 +76,9 @@ export interface SearchHit {
   title: string;
   objectID: string;
 }
+
+export interface Favourite {
+  id: string;
+  image: "1" | "2" | "3" | "4" | "5" | "6";
+  name: string;
+}

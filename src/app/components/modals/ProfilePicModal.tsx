@@ -24,7 +24,11 @@ const ProfilePicModal = ({
               alt={`Profile pic ${i}`}
               width={48}
               height={48}
-              className="rounded-full border border-primary-200 cursor-pointer"
+              className={`${
+                parseInt(selectedImage) === i
+                  ? "border-2"
+                  : "border"
+              } rounded-full border-primary-200  border cursor-pointer`}
               onClick={() => {
                 setSelectedImage(i.toString());
                 setOpenModal(false);

@@ -6,12 +6,12 @@ import HomeBanner from "./HomeBanner";
 import UploadBanner from "./UploadBanner";
 import { Content } from "@/types";
 import ContentContainer from "./ContentContainer";
-
+import Favourites from "./Favourites";
 
 const HomePage = ({ content }: { content: Content[] }) => {
   const [currentCategory, setCurrentCategory] = useState("all");
   const [selectedCourse, setSelectedCourse] = useState("");
-  
+
   return (
     <div>
       <div className="flex gap-4 justify-between">
@@ -29,8 +29,9 @@ const HomePage = ({ content }: { content: Content[] }) => {
         </div>
       </div>
       <div className="my-2 md:my-6 border-b-[1.5px] border-gray-200"></div>
-      <ContentContainer 
-        content={content} 
+      <Favourites />
+      <ContentContainer
+        content={content}
         selectedCourse={selectedCourse}
         currentCategory={currentCategory}
       />

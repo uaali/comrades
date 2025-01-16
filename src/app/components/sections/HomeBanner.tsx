@@ -12,11 +12,11 @@ const HomeBanner = () => {
       </p>
       <div className="flex justify-between">
         <Link
-          href="/tools/report-gen"
+          href="/tools/examai"
           className="relative flex items-center justify-center"
         >
           <p className="absolute font-bold text-sm font-poppins text-white text-wrap m-1 text-center">
-            AI Lab Report Generator
+            Exam AI
           </p>
           <Image
             src="/images/ailabreportgenimage.png"
@@ -26,7 +26,7 @@ const HomeBanner = () => {
             className="w-32 h-32 opacity-25 rounded-lg border-secondary-100 border-2"
           />
           <div className="absolute bottom-2 text-sm bg-accent-200 rounded-xl p-1 text-white flex gap-1 items-center hover:bg-accent-300">
-            <p>Generate Now</p>
+            <p>Exam AI</p>
             <MdArrowForward className="w-4 h-4" />
           </div>
         </Link>
