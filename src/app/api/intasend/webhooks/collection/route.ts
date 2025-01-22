@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       if (state === "COMPLETE") {
         const userId = api_ref.slice("buytokens".length);
         await updateDocument("users", userId, {
-          ai_tokens: getTokensByPrice(Number(value.toFixed(0))),
+          ai_tokens: getTokensByPrice(Number(value)),
         });
       }
       return NextResponse.json("Success", { status: 200 });

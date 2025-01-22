@@ -7,8 +7,6 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { FaCoins, FaPhone, FaBolt, FaCrown, FaCheck } from "react-icons/fa";
 
-
-
 const BuyTokens = ({
   openModal,
   setOpenModal,
@@ -21,8 +19,6 @@ const BuyTokens = ({
   const [selectedBundle, setSelectedBundle] = useState<BundleType | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [showPayment, setShowPayment] = useState(false);
-
-
 
   const handlePayment = async () => {
     if (!validateAndNormalizePhone(phoneNumber)) {
@@ -46,6 +42,8 @@ const BuyTokens = ({
           phone: phoneNumber,
         }),
       });
+      toast.dismiss();
+      toast("Wait for tokens to reflect after payment");
     } catch (error) {
       toast.dismiss();
       toast.error("Failed to initiate payment");
