@@ -82,7 +82,6 @@ export default function FavoriteUser({ publisherId }: { publisherId: string }) {
       const newFavoriteRef = doc(favouritesRef, publisherId);
 
       await setDoc(newFavoriteRef, {
-        id: publisherId,
         name: state.favoriteName,
         image: state.selectedImage,
       });
@@ -151,27 +150,29 @@ export default function FavoriteUser({ publisherId }: { publisherId: string }) {
         />
       )}
 
-      <h2 className="font-bold font-poppins mb-4">
-        {state.favorited ? "Your favorite" : "Add to favourites"}
-      </h2>
+      {!state.favorited && (
+        <h2 className="font-bold font-poppins mb-4">Add to favourites</h2>
+      )}
 
       {state.favorited ? (
-        <div className="flex flex-col justify-center items-center">
-          <Image
-            height={48}
-            width={48}
-            alt="profile picture"
-            className="rounded-full w-12 h-12 border border-primary-200"
-            src={`/profile_icons/${state.selectedImage}.svg`}
-          />
-          <p className="font-medium">{state.favoriteName}</p>
-          <button
-            onClick={handleRemove}
-            disabled={state.saving}
-            className="text-red-500 text-sm w-min hover:text-red-600 transition-colors disabled:opacity-50"
-          >
-            {state.saving ? "Removing..." : "Remove"}
-          </button>
+        <div className="flex justify-center md:justify-start">
+          <div className="flex flex-col items-center justify-center">
+            <Image
+              height={48}
+              width={48}
+              alt="profile picture"
+              className="rounded-full w-12 h-12 border border-primary-200"
+              src={`/profile_icons/${state.selectedImage}.svg`}
+            />
+            <p className="font-medium">{state.favoriteName}</p>
+            <button
+              onClick={handleRemove}
+              disabled={state.saving}
+              className="text-red-500 text-sm w-min hover:text-red-600 transition-colors disabled:opacity-50"
+            >
+              {state.saving ? "Removing..." : "Remove"}
+            </button>
+          </div>
         </div>
       ) : (
         <div className="flex items-center justify-between md:justify-start gap-4 md:gap-8 flex-wrap font-inter">

@@ -10,7 +10,6 @@ import UploadBanner from "../components/sections/UploadBanner";
 import { Content } from "@/types";
 import DashboardContentContainer from "../components/sections/DashboardContentContainer";
 import toast from "react-hot-toast";
-import { getDocument } from "@/lib/firebase";
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 
 const Dashboard = () => {

@@ -72,6 +72,15 @@ export interface Withdrawal {
   walletId: string;
 }
 
+export interface BundleType {
+  name: string;
+  price: number;
+  tokens: number;
+  questions: number;
+  description: string;
+  highlight?: boolean;
+}
+
 export interface SearchHit {
   title: string;
   objectID: string;
@@ -81,4 +90,19 @@ export interface Favourite {
   id: string;
   image: "1" | "2" | "3" | "4" | "5" | "6";
   name: string;
+}
+
+export interface ExamAIQuiz {
+  id: string;
+  title: string;
+  topic: string;
+  question: string;
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+  };
+  answer: "A" | "B" | "C" | "D";
+  reason: string;
 }

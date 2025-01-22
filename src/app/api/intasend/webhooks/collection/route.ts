@@ -1,4 +1,5 @@
 import { db, getDocument, updateDocument } from "@/lib/firebase/admin";
+import bundles from "@/utils/examAIBundles";
 import { NextResponse } from "next/server";
 
 const APP_WALLET = "Y279PPK";
@@ -60,13 +61,28 @@ async function intraTransfer(
   return responseData;
 }
 
+function getTokensByPrice(price: number) {
+  const bundle = bundles.find((b) => b.price === price);
+  return bundle ? bundle.tokens : null;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { invoice_id, state, challenge, api_ref, net_amount } = body;
+    const { invoice_id, state, challenge, api_ref, net_amount, value } = body;
 
     if (challenge !== process.env.INTASEND_WEBHOOK_CHALLENGE) {
       return NextResponse.json({ error: "Invalid challenge" }, { status: 400 });
+    }
+
+    if (api_ref.includes("buytokens")) {
+      if (state === "COMPLETE") {
+        const userId = api_ref.slice("buytokens".length);
+        await updateDocument("users", userId, {
+          ai_tokens: getTokensByPrice(Number(value.toFixed(0))),
+        });
+      }
+      return NextResponse.json("Success", { status: 200 });
     }
 
     if (state === "COMPLETE") {

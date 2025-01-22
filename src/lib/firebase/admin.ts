@@ -61,6 +61,7 @@ async function deleteDocument(collection: string, id: string) {
 export {
   db,
   storage,
+  admin,
   createDocument,
   updateDocument,
   deleteDocument,

@@ -1,4 +1,4 @@
-import QuizesContainer from "@/app/components/sections/QuizesContainer";
+import Quiz from "@/app/components/sections/Quiz";
 
 const ExamAi = () => {
   return (
@@ -12,7 +12,7 @@ const ExamAi = () => {
       </p>
       <hr />
       <div className="my-4">
-        <QuizesContainer />
+        <Quiz />
       </div>
     </div>
   );
