@@ -137,6 +137,7 @@ const Quiz = () => {
       });
       setCreatingQuiz(false);
       toast.dismiss();
+      window.location.reload();
       if (!response.ok) throw new Error();
       toast.success("Quiz created successfully");
     } catch {
@@ -305,9 +306,9 @@ const Quiz = () => {
                             });
                             setShowDisagree(true);
                           }}
-                          className="text-blue-600 hover:text-blue-800 cursor-pointer mt-2 underline text-sm"
+                          className="text-blue-600 hover:text-blue-800 cursor-pointer mt-2 underline text-sm underline-offset-2"
                         >
-                          I don't agree
+                          I don't agree / Understand
                         </p>
                       </>
                     )}

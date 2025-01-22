@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 const APP_WALLET = "Y279PPK";
 const APP_GROW_WALLET = "YRBXGGK";
 const MY_PROFIT_WALLET = "YMJLERY";
+const TOKENS_PROFIT_WALLET = "Y3EPZ7Y";
 const APP_GROW_PROFIT = 0.2;
 
 const calculateProfit = (amount: any): number => {
@@ -81,6 +82,14 @@ export async function POST(request: Request) {
         await updateDocument("users", userId, {
           ai_tokens: getTokensByPrice(Number(value)),
         });
+
+        //transfer money to token profit wallet
+        await intraTransfer(
+          APP_WALLET,
+          TOKENS_PROFIT_WALLET,
+          Number(net_amount),
+          `${userId} AI Tokens Purchase`
+        );
       }
       return NextResponse.json("Success", { status: 200 });
     }
