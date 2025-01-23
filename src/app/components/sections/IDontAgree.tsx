@@ -330,7 +330,7 @@ const IDontAgree = ({
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) =>
+              onKeyDown={(e) =>
                 e.key === "Enter" && !isSending && sendMessage(newMessage)
               }
               placeholder={

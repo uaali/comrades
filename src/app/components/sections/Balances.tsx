@@ -1,6 +1,5 @@
 "use client";
 
-import { updateUser } from "@/lib/users";
 import { User } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
@@ -65,7 +64,7 @@ const Balances = ({ user }: { user: User }) => {
             Copy Referral Link
           </button>
           <Link
-            href="/referrals"
+            href={`/tokens2cash/${user.uid}`}
             className="px-3 py-1 rounded-lg border-accent-200 border"
           >
             Convert to Cash

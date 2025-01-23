@@ -188,21 +188,20 @@ const Quiz = () => {
           />
         )}
         <div className="bg-white rounded-xl shadow-lg p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">{quiz.title}</h1>
-            <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-accent-200">
-                {firebaseUser?.ai_tokens} AI tokens
-              </p>
-              <button
-                onClick={() => setBuyTokensModalOpen(true)}
-                className="text-sm underline underline-offset-1 text-blue-500"
-              >
-                Add More
-              </button>
-            </div>
+          <div className="flex justify-end mb-2 items-center gap-2">
+            <p className="text-sm font-semibold text-accent-200 text-nowrap">
+              {firebaseUser?.ai_tokens} AI tokens
+            </p>
+            <button
+              onClick={() => setBuyTokensModalOpen(true)}
+              className="text-sm underline underline-offset-1 text-blue-500 text-nowrap"
+            >
+              Add More
+            </button>
           </div>
-
+          <h1 className="text-lg md:text-2xl font-bold text-gray-800 text-center">
+            {truncateText(quiz.title, 25)}
+          </h1>
           <p className="text-gray-600 mb-8 text-center">
             {truncateText(quiz.topic, 50)}
           </p>

@@ -1,8 +1,9 @@
 import { admin, db, getDocument, updateDocument } from "@/lib/firebase/admin";
 import bundles from "@/utils/examAIBundles";
+import { intraTransfer } from "@/utils/intraTransfer";
 import { NextResponse } from "next/server";
 
-const APP_WALLET = "Y279PPK";
+export const APP_WALLET = "Y279PPK";
 const APP_GROW_WALLET = "YRBXGGK";
 const MY_PROFIT_WALLET = "YMJLERY";
 const TOKENS_PROFIT_WALLET = "Y3EPZ7Y";
@@ -20,47 +21,6 @@ const calculateProfit = (amount: any): number => {
   // Calculate and round profit
   return Number((numAmount * (percentage / 100)).toFixed(2));
 };
-
-async function intraTransfer(
-  fromWalletId: string,
-  toWalletId: string,
-  amount: number,
-  narrative: string
-) {
-  // Ensure amount is rounded to 2 decimal places
-  const formattedAmount = Number(amount.toFixed(2)).toString();
-
-  const options = {
-    method: "POST",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-      Authorization: `Bearer ${process.env.INTASEND_API_KEY_SECRET}`,
-    },
-    body: JSON.stringify({
-      wallet_id: toWalletId,
-      amount: formattedAmount,
-      narrative: narrative,
-    }),
-  };
-
-  const response = await fetch(
-    `https://payment.intasend.com/api/v1/wallets/${fromWalletId}/intra_transfer/`,
-    options
-  );
-
-  const responseData = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      `IntaSend transfer failed: ${response.statusText} - ${JSON.stringify(
-        responseData
-      )}`
-    );
-  }
-
-  return responseData;
-}
 
 function getTokensByPrice(price: number) {
   const bundle = bundles.find((b) => b.price === price);
