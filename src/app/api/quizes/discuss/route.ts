@@ -1,3 +1,5 @@
+export const maxDuration = 60;
+
 import { admin, db } from "@/lib/firebase/admin";
 import { NextResponse } from "next/server";
 import { encodingForModel } from "js-tiktoken";

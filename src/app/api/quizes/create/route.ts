@@ -1,3 +1,5 @@
+export const maxDuration = 60;
+
 import { admin, db } from "@/lib/firebase/admin";
 import { jsonSchema, systemPrompt } from "@/utils/examAIConsts";
 import { maxExamAIQuestions } from "@/utils/maxExamAIQuestions";
