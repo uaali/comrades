@@ -3,7 +3,7 @@ import bundles from "@/utils/examAIBundles";
 import { intraTransfer } from "@/utils/intraTransfer";
 import { NextResponse } from "next/server";
 
-export const APP_WALLET = "Y279PPK";
+const APP_WALLET = "Y279PPK";
 const APP_GROW_WALLET = "YRBXGGK";
 const MY_PROFIT_WALLET = "YMJLERY";
 const TOKENS_PROFIT_WALLET = "Y3EPZ7Y";

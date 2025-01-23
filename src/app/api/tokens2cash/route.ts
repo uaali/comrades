@@ -1,7 +1,9 @@
 import { admin, db } from "@/lib/firebase/admin";
 import { intraTransfer } from "@/utils/intraTransfer";
 import { NextResponse } from "next/server";
-import { APP_WALLET } from "../intasend/webhooks/collection/route";
+
+
+const APP_WALLET = "Y279PPK";
 
 export async function POST(req: Request) {
   const data = await req.json();
