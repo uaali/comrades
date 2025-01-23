@@ -30,9 +30,9 @@ const HomeBanner = () => {
             <MdArrowForward className="w-4 h-4" />
           </div>
         </Link>
-        <Link href="/tools/docx2pdf" className="flex items-center flex-col">
+        <Link href="/tools/images2pdf" className="flex items-center flex-col">
           <Image
-            src="/images/docx2pdfimage.png"
+            src="/images/images2pdf.jpg"
             width={1024}
             height={768}
             className="w-[128px] h-[96px] rounded"

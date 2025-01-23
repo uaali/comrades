@@ -36,7 +36,7 @@ const Navbar = () => {
 
   const tools = [
     { path: "/tools/report-gen", label: "Lab Report Gen" },
-    { path: "/tools/docx2pdf", label: "Docx 2 PDF" },
+    { path: "/tools/images2pdf", label: "Images(s) 2 PDF" },
   ];
 
   useEffect(() => {
