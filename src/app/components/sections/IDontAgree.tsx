@@ -32,6 +32,7 @@ interface IDontAgreeProps {
   onClose: () => void;
   user: User;
   ai_tokens: number;
+  setBuyTokensModalOpen: (open: boolean) => void;
 }
 
 const IDontAgree = ({
@@ -39,6 +40,7 @@ const IDontAgree = ({
   onClose,
   user,
   ai_tokens,
+  setBuyTokensModalOpen,
 }: IDontAgreeProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -96,8 +98,9 @@ const IDontAgree = ({
     }
 
     const estimateTokens = inputTokens + 740;
-    if (inputTokens < estimateTokens) {
-      toast.error("Please buy tokens");
+    if (ai_tokens < estimateTokens) {
+      toast.error(`You need atleast ${estimateTokens} tokens`);
+      toast.error("Please buy more tokens");
       return;
     }
 
@@ -230,8 +233,14 @@ const IDontAgree = ({
       >
         <div className="bg-accent-200 text-white p-4 flex justify-between items-center shrink-0">
           <h3 className="font-bold">Discussion</h3>
-          <div>
-            <p className="">{ai_tokens} tokens</p>
+          <div className="flex items-center gap-3">
+            <p className="text-sm text-gray-400">{ai_tokens} tokens</p>
+            <button
+              onClick={() => setBuyTokensModalOpen(true)}
+              className="text-sm underline underline-offset-1 text-white"
+            >
+              Buy More
+            </button>
           </div>
           <button
             onClick={onClose}

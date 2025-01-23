@@ -1,4 +1,4 @@
-import { db, getDocument, updateDocument } from "@/lib/firebase/admin";
+import { admin, db, getDocument, updateDocument } from "@/lib/firebase/admin";
 import bundles from "@/utils/examAIBundles";
 import { NextResponse } from "next/server";
 
@@ -64,7 +64,7 @@ async function intraTransfer(
 
 function getTokensByPrice(price: number) {
   const bundle = bundles.find((b) => b.price === price);
-  return bundle ? bundle.tokens : null;
+  return bundle?.tokens;
 }
 
 export async function POST(request: Request) {
@@ -79,9 +79,16 @@ export async function POST(request: Request) {
     if (api_ref.includes("buytokens")) {
       if (state === "COMPLETE") {
         const userId = api_ref.slice("buytokens".length);
-        await updateDocument("users", userId, {
-          ai_tokens: getTokensByPrice(Number(value)),
-        });
+        const purchasedTokens = getTokensByPrice(Number(value));
+        if (!purchasedTokens) {
+          return NextResponse.json({ error: "Invalid value" }, { status: 400 });
+        }
+        await db
+          .collection("users")
+          .doc(userId)
+          .update({
+            ai_tokens: admin.firestore.FieldValue.increment(purchasedTokens),
+          });
 
         //transfer money to token profit wallet
         await intraTransfer(
@@ -128,9 +135,11 @@ export async function POST(request: Request) {
       if (transaction.referrer) {
         const referrerAmount = Number((myProfit * 0.01).toFixed(2));
         myProfit = Number((myProfit - referrerAmount).toFixed(2));
-        const referrerDoc = db.collection("users").doc(transaction.referrer);
-        batch.update(referrerDoc, {
-          tokenBalance: Number((referrerAmount * 10).toFixed(1)),
+        const referrerRef = db.collection("users").doc(transaction.referrer);
+        batch.update(referrerRef, {
+          tokenBalance: admin.firestore.FieldValue.increment(
+            Number((referrerAmount * 10).toFixed(1))
+          ),
         });
       }
 

@@ -92,17 +92,19 @@ export interface Favourite {
   name: string;
 }
 
-export interface ExamAIQuiz {
-  id: string;
+interface QuizOption {
+  [key: string]: string;
+}
+
+export interface QuizQuestion {
+  question: string;
+  options: QuizOption;
+  answer: string;
+  reason: string;
+}
+
+export interface Quiz {
   title: string;
   topic: string;
-  question: string;
-  options: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
-  answer: "A" | "B" | "C" | "D";
-  reason: string;
+  questions: QuizQuestion[];
 }

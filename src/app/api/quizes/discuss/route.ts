@@ -62,11 +62,12 @@ export async function POST(request: Request) {
 
     const responseData = await response.json();
     const message = responseData.choices[0].message.content;
-    console.log("Message", message);
     const usedTokens = responseData.usage.total_tokens;
-    console.log("Response Data", responseData);
-    console.log("Message", message);
 
+    await db.collection("users").doc(userId).update({
+      ai_tokens: admin.firestore.FieldValue.increment(-usedTokens),
+    });
+    
     return NextResponse.json({ message }, { status: 200 });
   } catch (error: any) {
     console.log(error);
