@@ -7,23 +7,85 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MdConstruction, MdDashboard, MdExplore } from "react-icons/md";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase/config";
+import { auth, db } from "@/lib/firebase/config";
 import { useEffect, useState } from "react";
 import SearchBar from "@/app/components/ui/SearchBar";
+import { useCollection } from "react-firebase-hooks/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import NotificationsModal from "@/app/components/modals/NotificationsModal";
+import { Notification } from "@/types";
+import toast from "react-hot-toast";
+
+const searchPhrases = [
+  "Type to search...",
+  "Search notes ...",
+  "Find by title ...",
+  "Search content ...",
+];
 
 const Navbar = () => {
   const pathName = usePathname();
   const [user, loading] = useAuthState(auth);
-  const [currentPhrase, setCurrentPhrase] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const searchPhrases = [
-    "Type to search...",
-    "Search notes ...",
-    "Find by title ...",
-    "Search content ...",
-  ];
+  const [notifications] = useCollection(
+    user && user.uid
+      ? query(collection(db, "notifications"), where("userId", "==", user.uid))
+      : null
+  );
+  const [fetchedNotifications, setFetchedNotifications] = useState<
+    Notification[] | null
+  >();
+  const [isNotificationModalOpen, setIsNotificationModalOpen] = useState(false);
+  useEffect(() => {
+    if (!notifications) return;
+    const data = notifications.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: doc.data().timestamp.toDate(),
+    })) as Notification[];
+    setFetchedNotifications(data);
+  }, [notifications, user]);
+
+  const handleDeleteNotification = async (id: string) => {
+    const docRef = doc(db, "notifications", id);
+    await deleteDoc(docRef);
+  };
+
+  const handleToggleReadNotification = async (id: string, read: boolean) => {
+    const docRef = doc(db, "notifications", id);
+    await updateDoc(docRef, { read: !read });
+  };
+
+  const handleMarkAllReadNotification = () => {
+    if (fetchedNotifications) {
+      fetchedNotifications.forEach(async (notification) => {
+        const docRef = doc(db, "notifications", notification.id);
+        await updateDoc(docRef, { read: true });
+      });
+    }
+  };
+
+  const handleDeleteMultipleNotification = (ids: string[]) => {
+    toast.loading("Deleting ...")
+    try {
+      ids.forEach(async (id) => {
+        const docRef = doc(db, "notifications", id);
+        await deleteDoc(docRef);
+      });
+      toast.dismiss()
+      toast.success("Deleted successfully")
+    } catch (error) {
+      toast.dismiss()
+      toast.error("Failed")
+    }
+  };
 
   const navLinks = [
     { path: "/", label: "Explore", icon: <MdExplore className="w-5 h-5" /> },
@@ -39,39 +101,8 @@ const Navbar = () => {
     { path: "/tools/images2pdf", label: "Images(s) 2 PDF" },
   ];
 
-  useEffect(() => {
-    const typingSpeed = 800;
-    const deletingSpeed = 100;
-    const pauseDuration = 5000;
-
-    const animate = () => {
-      const currentText = searchPhrases[currentIndex];
-
-      if (!isDeleting) {
-        if (currentPhrase.length < currentText.length) {
-          setCurrentPhrase(currentText.slice(0, currentPhrase.length + 1));
-          return setTimeout(animate, typingSpeed);
-        }
-        setIsDeleting(true);
-        return setTimeout(animate, pauseDuration);
-      }
-
-      if (currentPhrase.length > 0) {
-        setCurrentPhrase(currentPhrase.slice(0, -1));
-        return setTimeout(animate, deletingSpeed);
-      }
-
-      setIsDeleting(false);
-      setCurrentIndex((prev) => (prev + 1) % searchPhrases.length);
-      return setTimeout(animate, typingSpeed);
-    };
-
-    const timeout = setTimeout(animate, typingSpeed);
-    return () => clearTimeout(timeout);
-  }, [currentPhrase, currentIndex, isDeleting]);
-
   return (
-    <>
+    <div>
       {/* Desktop Navbar */}
       <nav className="bg-secondary-200 md:px-6 p-4 items-center justify-between font-inter flex">
         <Link href="/">
@@ -122,7 +153,14 @@ const Navbar = () => {
           </Dropdown>
         </div>
         <SearchBar userId={user?.uid} searchPhrases={searchPhrases} />
-        <UserMenu user={user} loading={loading} />
+        <UserMenu
+          user={user}
+          loading={loading}
+          setIsNotificationModalOpen={setIsNotificationModalOpen}
+          unreadNotifications={
+            fetchedNotifications?.filter((n) => !n.read).length || 0
+          }
+        />
       </nav>
 
       {/* Mobile Bottom Navigation */}
@@ -159,7 +197,17 @@ const Navbar = () => {
           </Dropdown>
         </div>
       </nav>
-    </>
+
+      <NotificationsModal
+        isOpen={isNotificationModalOpen}
+        onClose={() => setIsNotificationModalOpen(false)}
+        notifications={fetchedNotifications || []}
+        onDelete={handleDeleteNotification}
+        onToggleRead={handleToggleReadNotification}
+        onMarkAllRead={handleMarkAllReadNotification}
+        onDeleteMultiple={handleDeleteMultipleNotification}
+      />
+    </div>
   );
 };
 

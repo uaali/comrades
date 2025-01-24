@@ -108,3 +108,13 @@ export interface Quiz {
   topic: string;
   questions: QuizQuestion[];
 }
+
+export interface Notification {
+  id: string;
+  userId: string
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  link?: string;
+}

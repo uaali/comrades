@@ -1,7 +1,8 @@
 "use client";
 
 import { updateDocument } from "@/lib/firebase";
-import { auth } from "@/lib/firebase/config";
+import { auth, db } from "@/lib/firebase/config";
+import { doc, updateDoc } from "firebase/firestore";
 import { useCookies } from "next-client-cookies";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
@@ -21,25 +22,23 @@ const ReferralWrapper = () => {
     }
     const storedCookie = cookies.get("referrer");
     const realReferrer = storedCookie || referrer;
-    if (!realReferrer) {
-      return;
-    }
+
     const storeReferrer = async () => {
       if (!user || !realReferrer) return;
       try {
-        await updateDocument("users", user.uid, {
-          referrer: realReferrer,
-        });
+        const docRef = doc(db, "users", user.uid);
+        if (!docRef) return;
+        await updateDoc(docRef, { referrer: realReferrer });
         cookies.remove("referrer");
       } catch (error) {
-        return
+        console.log(error);
       }
     };
+
     if (user && realReferrer) {
-      //store referrer in user doc
       storeReferrer();
     }
-  }, [user]);
+  }, [user, referrer, cookies]);
 
   return null;
 };

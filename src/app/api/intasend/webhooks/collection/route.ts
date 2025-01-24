@@ -1,6 +1,8 @@
 import { admin, db, getDocument, updateDocument } from "@/lib/firebase/admin";
+import { Notification } from "@/types";
 import bundles from "@/utils/examAIBundles";
 import { intraTransfer } from "@/utils/intraTransfer";
+import { Timestamp } from "firebase-admin/firestore";
 import { NextResponse } from "next/server";
 
 const APP_WALLET = "Y279PPK";
@@ -101,6 +103,20 @@ export async function POST(request: Request) {
             Number((referrerAmount * 10).toFixed(1))
           ),
         });
+
+        //notification to referrer
+        const notificationRef = db.collection("notifications").doc();
+        const notification = {
+          title: "Referral Tokens!",
+          message: `You have received ${Number(
+            (referrerAmount * 10).toFixed(1)
+          )} tokens from a referral`,
+          read: false,
+          timestamp: Timestamp.now(),
+          userId: transaction.referrer,
+          link: "/dashboard",
+        };
+        batch.set(notificationRef, notification);
       }
 
       // Perform transfers
@@ -134,6 +150,18 @@ export async function POST(request: Request) {
         netAmount: publisherAmount,
       });
 
+      //notify publisher
+      const notificationRef = db.collection("notifications").doc();
+      const notification = {
+        title: "A Sale!",
+        message: `You have received ${publisherAmount} KES from your content purchase. Check your wallet balance.`,
+        read: false,
+        timestamp: Timestamp.now(),
+        userId: transaction.publisherId,
+        link: "/dashboard",
+      };
+      batch.set(notificationRef, notification);
+      
       await batch.commit();
     } else if (state === "PROCESSING") {
       await updateDocument("transactions", api_ref, {

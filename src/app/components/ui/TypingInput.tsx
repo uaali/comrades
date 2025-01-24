@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface TypingInputProps {
   style: string;
@@ -21,25 +21,28 @@ const TypingInput = ({
   const deletingSpeed = 50;
   const pauseTime = 2000;
 
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+  // Ref to store the timeoutId so we don't trigger re-renders
+  const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    // Clear the previous timeout when the component unmounts or before setting a new one
     const type = () => {
       const currentWord = placeholders[index];
+
       if (isTyping) {
         if (currentText.length < currentWord.length) {
-          timeoutId = setTimeout(() => {
+          timeoutIdRef.current = setTimeout(() => {
             setCurrentText(currentWord.slice(0, currentText.length + 1));
           }, typingSpeed);
         } else {
-          timeoutId = setTimeout(() => setIsTyping(false), pauseTime);
+          timeoutIdRef.current = setTimeout(() => setIsTyping(false), pauseTime);
         }
       } else {
         if (currentText.length === 0) {
           setIndex((prev) => (prev + 1) % placeholders.length);
           setIsTyping(true);
         } else {
-          timeoutId = setTimeout(() => {
+          timeoutIdRef.current = setTimeout(() => {
             setCurrentText(currentText.slice(0, -1));
           }, deletingSpeed);
         }
@@ -47,7 +50,13 @@ const TypingInput = ({
     };
 
     type();
-    return () => clearTimeout(timeoutId);
+
+    // Cleanup on unmount or before starting a new timeout
+    return () => {
+      if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
+      }
+    };
   }, [currentText, isTyping, index]);
 
   return (

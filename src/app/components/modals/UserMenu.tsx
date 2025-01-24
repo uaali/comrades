@@ -19,9 +19,16 @@ interface User {
 interface UserMenuProps {
   user: User | null | undefined;
   loading: boolean;
+  setIsNotificationModalOpen: (open: boolean) => void;
+  unreadNotifications: number;
 }
 
-const UserMenu: React.FC<UserMenuProps> = ({ user, loading }) => {
+const UserMenu: React.FC<UserMenuProps> = ({
+  user,
+  loading,
+  setIsNotificationModalOpen,
+  unreadNotifications,
+}) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const menuRef = useRef<HTMLElement>(null);
 
@@ -40,7 +47,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, loading }) => {
   const router = useRouter();
   return (
     <div className="relative" ref={menuRef as any}>
-      <div>
+      <div className="flex items-center space-x-2">
         {user?.photoURL ? (
           <div
             className="relative hover:cursor-pointer"
@@ -53,6 +60,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, loading }) => {
               alt="Profile"
               className="h-8 w-8 rounded-full border-primary-200 border"
             />
+            {unreadNotifications > 0 && (
+              <span className="absolute flex justify-center items-center -top-1 -right-1 bg-red-500 animate-bounce text-white text-xs w-3 h-3 rounded-[50%]">
+                {unreadNotifications}
+              </span>
+            )}
           </div>
         ) : loading ? (
           <div className="rounded-full animate-pulse bg-white">
@@ -81,14 +93,19 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, loading }) => {
                 <div className="h-px bg-gray-200 my-1" />
 
                 {/* Menu Items */}
-                <Link
-                  href="/notifications"
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  onClick={() => setIsOpen(false)}
+                <div
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:cursor-pointer"
+                  onClick={() => {
+                    setIsNotificationModalOpen(true);
+                    setIsOpen(false);
+                  }}
                 >
                   <MdNotifications className="mr-2 h-4 w-4" />
                   <p>Notifications</p>
-                </Link>
+                  {unreadNotifications > 0 && (
+                    <div className="bg-red-600 animate-pulse w-2 h-2 ml-2 rounded-[50%]"></div>
+                  )}
+                </div>
                 <Link
                   href="/profile/transactions"
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

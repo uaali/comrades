@@ -142,15 +142,13 @@ const Quiz = () => {
   if (firebaseUser && firebaseUser.ai_tokens === undefined) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center">
-        {createQuizModalOpen && (
-          <CreateQuizModal
-            openModal={createQuizModalOpen}
-            setOpenModal={setCreateQuizModalOpen}
-            maxQuestions={maxExamAIQuestions(true)}
-            onSubmit={createQuiz}
-            submitting={creatingQuiz}
-          />
-        )}
+        <CreateQuizModal
+          openModal={createQuizModalOpen}
+          setOpenModal={setCreateQuizModalOpen}
+          maxQuestions={maxExamAIQuestions(true)}
+          onSubmit={createQuiz}
+          submitting={creatingQuiz}
+        />
         <button
           onClick={() => setCreateQuizModalOpen(true)}
           className="flex items-center gap-2 bg-accent-200 hover:bg-accent-300 text-white px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md"
@@ -169,14 +167,14 @@ const Quiz = () => {
   if (quiz)
     return (
       <div className="max-w-3xl mx-auto">
-        {buyTokensModalOpen && user && (
+        {user && (
           <BuyTokens
             openModal={buyTokensModalOpen}
             setOpenModal={setBuyTokensModalOpen}
             user={user}
           />
         )}
-        {createQuizModalOpen && firebaseUser?.ai_tokens !== undefined && (
+        {firebaseUser?.ai_tokens !== undefined && (
           <CreateQuizModal
             openModal={createQuizModalOpen}
             setOpenModal={setCreateQuizModalOpen}

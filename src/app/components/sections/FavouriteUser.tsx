@@ -137,7 +137,7 @@ export default function FavoriteUser({ publisherId }: { publisherId: string }) {
 
   return (
     <div className="my-2">
-      {state.profilePicModalOpen && state.selectedImage && (
+      {state.selectedImage && (
         <ProfilePicModal
           openModal={state.profilePicModalOpen}
           setOpenModal={(open) =>
