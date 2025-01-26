@@ -97,7 +97,7 @@ const Navbar = () => {
   ];
 
   const tools = [
-    { path: "/tools/report-gen", label: "Lab Report Gen" },
+    { path: "/tools/examai", label: "Exam AI" },
     { path: "/tools/images2pdf", label: "Images(s) 2 PDF" },
   ];
 

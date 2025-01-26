@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { FaDatabase, FaHardDrive, FaServer } from "react-icons/fa6";
 import { FiLayers } from "react-icons/fi";
 import { User } from "firebase/auth";
+import { validateAndNormalizePhone } from "@/utils/validatePhoneAndNormalize";
 
 interface StorageBundle {
   id: number;
@@ -61,38 +62,39 @@ const StoragePurchaseModal = ({
   ];
 
   const handlePayment = async () => {
-    if (!phoneNumber.match(/^0\d{9}$/)) {
+    if (!validateAndNormalizePhone(phoneNumber)) {
       toast.error("Invalid phone number");
       return;
     }
-
-    toast.loading(`Initiating payment for ${selectedBundle?.size}`);
+    toast.loading(
+      `Initiating STK push to ${phoneNumber} for KSh ${selectedBundle?.price}`
+    );
 
     try {
-      // Simulated payment API call
-      await fetch("/api/purchase-storage", {
+      const firebaseToken = await user.getIdToken();
+      const response = await fetch("/api/buy-storage", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${firebaseToken}`,
         },
         body: JSON.stringify({
-          size: selectedBundle?.size,
-          price: selectedBundle?.price,
+          amount: selectedBundle?.price,
           phone: phoneNumber,
         }),
       });
-
+      if(!response.ok) {
+        throw new Error();
+      }
       toast.dismiss();
-      toast.success(
-        `Storage bundle ${selectedBundle?.size} purchased successfully`
-      );
-      setOpenModal(false);
+      toast("Wait for storage to reflect after payment");
     } catch (error) {
       toast.dismiss();
       toast.error("Payment failed");
     }
 
     // Reset states
+    setOpenModal(false);
     setShowPayment(false);
     setSelectedBundle(null);
     setPhoneNumber("");

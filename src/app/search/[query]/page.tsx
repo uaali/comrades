@@ -1,6 +1,6 @@
 import ContentContainer from "@/app/components/sections/ContentContainer";
 import { searchClient } from "@/lib/algolia/client";
-import { db, getDocument } from "@/lib/firebase/admin";
+import { db} from "@/lib/firebase/admin";
 import { Content } from "@/types";
 
 const SearchPage = async ({
@@ -25,7 +25,6 @@ const SearchPage = async ({
   const content = uploads.filter(
     (upload): upload is Content => upload !== null
   );
-  console.log(content);
   return (
     <div className="p-4 md:px-6">
       <p className="font-bold tracking-wide font-inter">Search Results for: <span className="font-poppins">{query}</span></p>

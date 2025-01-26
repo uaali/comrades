@@ -19,10 +19,10 @@ const HomeBanner = () => {
             Exam AI
           </p>
           <Image
-            src="/images/ailabreportgenimage.png"
+            src="/images/examai.png"
             width={1024}
             height={1024}
-            alt="Image Illustration of ai lab report generator"
+            alt="Image Illustration of ExamAI"
             className="w-32 h-32 opacity-25 rounded-lg border-secondary-100 border-2"
           />
           <div className="absolute bottom-2 text-sm bg-accent-200 rounded-xl p-1 text-white flex gap-1 items-center hover:bg-accent-300">

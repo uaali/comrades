@@ -14,7 +14,7 @@ import CourseSelection from "../components/ui/CourseSelection";
 import { collection, doc } from "firebase/firestore";
 import {
   useCollectionOnce,
-  useDocumentDataOnce,
+  useDocumentData,
 } from "react-firebase-hooks/firestore";
 import { useRouter } from "next/navigation";
 import { signInWithPopup } from "firebase/auth";
@@ -58,7 +58,7 @@ const UploadPage = () => {
 
   const [courses, loading] = useCollectionOnce(coursesQuery);
 
-  const [storageQuota] = useDocumentDataOnce(
+  const [storageQuota] = useDocumentData(
     user ? doc(db, "userQuotas", user.uid) : null
   );
 

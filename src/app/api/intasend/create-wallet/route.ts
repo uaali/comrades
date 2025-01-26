@@ -37,7 +37,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error("Error creating wallet:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -30,8 +30,8 @@ const ReferralWrapper = () => {
         if (!docRef) return;
         await updateDoc(docRef, { referrer: realReferrer });
         cookies.remove("referrer");
-      } catch (error) {
-        console.log(error);
+      } catch {
+        return;
       }
     };
 

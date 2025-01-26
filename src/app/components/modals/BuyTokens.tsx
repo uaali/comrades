@@ -31,7 +31,7 @@ const BuyTokens = ({
 
     try {
       const firebaseToken = await user.getIdToken();
-      await fetch(`/api/buy-tokens`, {
+      const response = await fetch(`/api/buy-tokens`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,6 +42,9 @@ const BuyTokens = ({
           phone: phoneNumber,
         }),
       });
+      if(!response.ok) {
+        throw new Error();
+      }
       toast.dismiss();
       toast("Wait for tokens to reflect after payment");
     } catch (error) {

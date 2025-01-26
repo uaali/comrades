@@ -35,8 +35,6 @@ export async function POST(request: Request) {
         }),
       }
     );
-    const respData = await response.json();
-    console.log(respData);
     return NextResponse.json("Success", { status: 200 });
   } catch {
     return NextResponse.json("Internal Server Error", { status: 500 });

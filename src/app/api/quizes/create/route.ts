@@ -70,7 +70,6 @@ export async function POST(request: Request) {
       //generate questions and update quiz
       const resp = await generateQuestions(title, topic, numberOfQuestions);
       const totalTokensUsed = resp.usage.total_tokens;
-      console.log(totalTokensUsed);
       const parsedResp = JSON.parse(resp.choices[0].message.content);
       const questions = parsedResp.questions;
       await db.runTransaction(async (transaction) => {
