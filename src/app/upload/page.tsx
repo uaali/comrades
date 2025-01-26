@@ -11,10 +11,15 @@ import { toBase64 } from "../../utils/toBase64";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db, provider } from "@/lib/firebase/config";
 import CourseSelection from "../components/ui/CourseSelection";
-import { collection } from "firebase/firestore";
-import { useCollectionOnce } from "react-firebase-hooks/firestore";
+import { collection, doc } from "firebase/firestore";
+import {
+  useCollectionOnce,
+  useDocumentDataOnce,
+} from "react-firebase-hooks/firestore";
 import { useRouter } from "next/navigation";
 import { signInWithPopup } from "firebase/auth";
+import StorageUsage from "../components/ui/StorageUsage";
+import BuyStorage from "../components/modals/BuyStorage";
 
 const baseStyle = {
   height: "200px",
@@ -34,6 +39,8 @@ const baseStyle = {
 };
 
 const UploadPage = () => {
+  const [buyStorageModalOpen, setBuyStorageModalOpen] = useState(false);
+
   const [files, setFiles] = useState<File[] | null>(null);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -50,6 +57,10 @@ const UploadPage = () => {
   const coursesQuery = collection(db, "courses");
 
   const [courses, loading] = useCollectionOnce(coursesQuery);
+
+  const [storageQuota] = useDocumentDataOnce(
+    user ? doc(db, "userQuotas", user.uid) : null
+  );
 
   const router = useRouter();
 
@@ -107,9 +118,32 @@ const UploadPage = () => {
   };
   return (
     <div className="p-4 md:px-6 bg-background-200 text-text-50 w-full">
-      <p className="font-poppinsB text-lg md:text-2xl font-bold tracking-wide text-center md:text-left">
-        New Content
-      </p>
+      <div className="flex flex-col md:flex-row justify-center md:justify-between items-center">
+        <p className="font-poppinsB text-lg md:text-2xl font-bold tracking-wide text-center md:text-left">
+          New Content
+        </p>
+        {storageQuota && (
+          <div className="max-w-md w-full flex gap-2 items-center">
+            <StorageUsage
+              currentStorage={storageQuota.totalStorageUsed}
+              totalStorage={storageQuota.storageLimit}
+            />
+            <p className="text-nowrap">
+              {(storageQuota.totalStorageUsed / (1024 * 1024 * 1024)).toFixed(
+                2
+              )}{" "}
+              GB /{" "}
+              {(storageQuota.storageLimit / (1024 * 1024 * 1024)).toFixed(2)} GB
+            </p>
+            <button
+              onClick={() => setBuyStorageModalOpen(true)}
+              className="text-accent-200 text-sm underline text-nowrap"
+            >
+              Buy Storage
+            </button>
+          </div>
+        )}
+      </div>
       <div className="flex md:flex-row w-full justify-between gap-3 mt-5 flex-col">
         <div className="flex flex-col gap-2 w-full">
           <label
@@ -205,6 +239,13 @@ const UploadPage = () => {
           {submitting ? "Uploading..." : "Upload"}
         </button>
       </div>
+      {user && (
+        <BuyStorage
+          user={user}
+          openModal={buyStorageModalOpen}
+          setOpenModal={setBuyStorageModalOpen}
+        />
+      )}
     </div>
   );
 };

@@ -1,5 +1,4 @@
 import { admin, db, getDocument, updateDocument } from "@/lib/firebase/admin";
-import { Notification } from "@/types";
 import bundles from "@/utils/examAIBundles";
 import { intraTransfer } from "@/utils/intraTransfer";
 import { Timestamp } from "firebase-admin/firestore";
@@ -9,6 +8,7 @@ const APP_WALLET = "Y279PPK";
 const APP_GROW_WALLET = "YRBXGGK";
 const MY_PROFIT_WALLET = "YMJLERY";
 const TOKENS_PROFIT_WALLET = "Y3EPZ7Y";
+const STORAGE_PROFIT_WALLET = "Y2E8VV0";
 const APP_GROW_PROFIT = 0.2;
 
 const calculateProfit = (amount: any): number => {
@@ -29,13 +29,21 @@ function getTokensByPrice(price: number) {
   return bundle?.tokens;
 }
 
+//amount:GB
+const storageBundles: any = {
+  10: 1 * 1024 * 1024 * 1024,
+  49: 5 * 1024 * 1024 * 1024,
+  95: 10 * 1024 * 1024 * 1024,
+  150: 20 * 1024 * 1024 * 1024,
+};
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { invoice_id, state, challenge, api_ref, net_amount, value } = body;
 
     if (challenge !== process.env.INTASEND_WEBHOOK_CHALLENGE) {
-      return NextResponse.json({ error: "Invalid challenge" }, { status: 400 });
+      return NextResponse.json({ error: "Invalid challenge" }, { status: 200 });
     }
 
     if (api_ref.includes("buytokens")) {
@@ -43,7 +51,7 @@ export async function POST(request: Request) {
         const userId = api_ref.slice("buytokens".length);
         const purchasedTokens = getTokensByPrice(Number(value));
         if (!purchasedTokens) {
-          return NextResponse.json({ error: "Invalid value" }, { status: 400 });
+          return NextResponse.json({ error: "Invalid value" }, { status: 200 });
         }
         await db
           .collection("users")
@@ -63,12 +71,39 @@ export async function POST(request: Request) {
       return NextResponse.json("Success", { status: 200 });
     }
 
+    if (api_ref.includes("buystorage")) {
+      if (state === "COMPLETE") {
+        const userId = api_ref.slice("buystorage".length);
+        const purchasedStorage = storageBundles[Number(value)];
+        if (!purchasedStorage) {
+          return NextResponse.json({ error: "Invalid value" }, { status: 200 });
+        }
+        await db
+          .collection("userQuotas")
+          .doc(userId)
+          .update({
+            storageLimit:
+              admin.firestore.FieldValue.increment(purchasedStorage),
+            lastPaymentDate: Timestamp.now(),
+          });
+
+        //transfer money to storage profit wallet
+        await intraTransfer(
+          APP_WALLET,
+          STORAGE_PROFIT_WALLET,
+          Number(net_amount),
+          `${userId} Storage Purchase`
+        );
+      }
+      return NextResponse.json("Success", { status: 200 });
+    }
+
     if (state === "COMPLETE") {
       const transaction = await getDocument("transactions", api_ref);
       if (!transaction) {
         return NextResponse.json(
           { error: "Transaction not found" },
-          { status: 404 }
+          { status: 200 }
         );
       }
 
@@ -161,7 +196,7 @@ export async function POST(request: Request) {
         link: "/dashboard",
       };
       batch.set(notificationRef, notification);
-      
+
       await batch.commit();
     } else if (state === "PROCESSING") {
       await updateDocument("transactions", api_ref, {
@@ -177,10 +212,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error(error);
     return NextResponse.json(
       { error: "Error purchasing content" },
-      { status: 500 }
+      { status: 200 }
     );
   }
 }

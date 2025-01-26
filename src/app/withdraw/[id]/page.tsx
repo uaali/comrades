@@ -31,7 +31,7 @@ const Withdraw = async ({ params }: { params: Promise<{ id: string }> }) => {
       <div className="my-4">
         <p className="font-bold">Current Balance:</p>
         <p>Ksh. {wallet.available_balance}</p>
-        <p>You can withdraw Ksh. {withdrawableAmount}</p>
+        <p>You can withdraw Ksh. {withdrawableAmount.toFixed(0)}</p>
       </div>
       <WithdrawalForm walletBalance={wallet.available_balance} />
     </div>
