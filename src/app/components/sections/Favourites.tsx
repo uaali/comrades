@@ -90,7 +90,10 @@ const Favourites = () => {
   }, [favourites]);
 
   if (!user) return null;
-  if (error) return <ErrorState message="Failed to load favorites" />;
+  if (error) {
+    console.error(error);
+    return <ErrorState message="Failed to load favorites" />;
+  }
   if (loading)
     return (
       <div>

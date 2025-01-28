@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import { Toaster } from "react-hot-toast";
 import ReferralWrapper from "@/wrappers/ReferralWrapper";
 import { CookiesProvider } from "next-client-cookies/server";
+import AppCheckWrapper from "@/wrappers/AppCheckWrapper";
 
 const poppinsExtraBold = Poppins({
   variable: "--font-poppins",
@@ -39,6 +40,7 @@ export default function RootLayout({
         className={`${poppinsBold.variable} ${poppinsExtraBold.variable} ${inter.variable} antialiased bg-background-200`}
       >
         <Toaster />
+        <AppCheckWrapper/>
         <Navbar />
         <main className="pb-20 md:pb-0">{children}</main>
         <CookiesProvider>

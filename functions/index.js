@@ -42,7 +42,7 @@ exports.createUserDocument = functions
         tokenBalance: 0,
       };
 
-      await db.collection("users").doc(user.uid).set(userData);
+      const batch = db.batch();
 
       const notification = {
         title: `Welcome to the platform, ${user.displayName}`,
@@ -52,7 +52,13 @@ exports.createUserDocument = functions
         userId: user.uid,
         link: "/upload",
       };
-      await db.collection("notifications").doc().set(notification);
+
+      const userDocRef = db.collection("users").doc(user.uid);
+      batch.set(userDocRef, userData);
+      const notificationDocRef = db.collection("notifications").doc();
+      batch.set(notificationDocRef, notification);
+
+      await batch.commit();
     } catch (err) {
       console.error(err);
     }
