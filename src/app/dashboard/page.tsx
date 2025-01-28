@@ -10,12 +10,12 @@ import UploadBanner from "../components/sections/UploadBanner";
 import { Content } from "@/types";
 import DashboardContentContainer from "../components/sections/DashboardContentContainer";
 import toast from "react-hot-toast";
-import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, orderBy, query, where } from "firebase/firestore";
 
 const Dashboard = () => {
   const [user, loading, error] = useAuthState(auth);
   const [fetchedUser, setFetchedUser] = useState<User | null>();
-  const [currentCategory, setCurrentCategory] = useState("uploaded");
+  const [currentCategory, setCurrentCategory] = useState("purchased");
   const [uploadedContent, setUploadedContent] = useState<null | Content[]>();
   const [purchasedContent, setPurchasedContent] = useState<null | Content[]>();
 
@@ -59,7 +59,8 @@ const Dashboard = () => {
       try {
         const q = query(
           collection(db, "uploads"),
-          where("publisher", "==", user.uid)
+          where("publisher", "==", user.uid),
+          orderBy("createdAt", "desc")
         );
         const querySnapshot = await getDocs(q);
         const content: Content[] = [];
@@ -75,6 +76,7 @@ const Dashboard = () => {
         }
         setUploadedContent(content);
       } catch (error) {
+        console.error(error);
         toast.error("Error fetching uploaded content");
       }
     };
@@ -85,7 +87,8 @@ const Dashboard = () => {
         const transactionsQuery = query(
           collection(db, "transactions"),
           where("userId", "==", user.uid),
-          where("status", "==", "complete")
+          where("status", "==", "complete"),
+          orderBy("createdAt", "desc")
         );
         const transactionsSnapshot = await getDocs(transactionsQuery);
         if (transactionsSnapshot.empty) {
@@ -107,6 +110,7 @@ const Dashboard = () => {
         } as Content));
         setPurchasedContent(content);
       } catch (error) {
+        console.error(error);
         toast.error("Error fetching purchased content");
       }
     };
