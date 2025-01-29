@@ -34,30 +34,30 @@ const StoragePurchaseModal = ({
     {
       id: 1,
       size: "1GB",
-      price: 10,
+      price: 60,
       icon: FaHardDrive,
       saveAmount: 0,
     },
     {
       id: 2,
       size: "5GB",
-      price: 49,
+      price: 300,
       icon: FaDatabase,
-      saveAmount: 1,
+      saveAmount: 0,
     },
     {
       id: 3,
       size: "10GB",
-      price: 95,
+      price: 550,
       icon: FaServer,
-      saveAmount: 5,
+      saveAmount: 50,
     },
     {
       id: 4,
       size: "20GB",
-      price: 150,
+      price: 999,
       icon: FiLayers,
-      saveAmount: 50,
+      saveAmount: 201,
     },
   ];
 

@@ -31,10 +31,10 @@ function getTokensByPrice(price: number) {
 
 //amount:GB
 const storageBundles: any = {
-  10: 1 * 1024 * 1024 * 1024,
-  49: 5 * 1024 * 1024 * 1024,
-  95: 10 * 1024 * 1024 * 1024,
-  150: 20 * 1024 * 1024 * 1024,
+  60: 1 * 1024 * 1024 * 1024,
+  300: 5 * 1024 * 1024 * 1024,
+  550: 10 * 1024 * 1024 * 1024,
+  999: 20 * 1024 * 1024 * 1024,
 };
 
 export async function POST(request: Request) {

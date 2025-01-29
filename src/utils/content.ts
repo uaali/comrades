@@ -8,8 +8,7 @@ import { UserQuota } from "@/types";
 import { Timestamp } from "firebase-admin/firestore";
 import { getDownloadURL } from "firebase-admin/storage";
 
-const FREE_QUOTA = 1024 * 1024 * 1024; // 1GB in bytes
-const PAID_QUOTA_PRICE = 10; // 10ksh
+const FREE_QUOTA = 2.5 * 1024 * 1024 * 1024; // 2.5 GB in bytes
 
 export const uploadContent = async ({
   file,
