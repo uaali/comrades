@@ -24,6 +24,11 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+export const metadata: Metadata = {
+  title: "Tirigist Comrades",
+  description: "A place with everything you need as a comrade",
+};
+
 
 export default function RootLayout({
   children,
