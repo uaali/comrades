@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { IoMdShareAlt } from "react-icons/io";
 import { MdArrowForward } from "react-icons/md";
 
 const Balances = ({ user }: { user: User }) => {
@@ -26,11 +27,40 @@ const Balances = ({ user }: { user: User }) => {
     fetchWallet();
     setTokenBalance(user.tokenBalance);
   }, []);
+
+  const handleShare = async () => {
+    const shareData = {
+      title: "Join Tirigist Comrades Now!",
+      text: "Earn Money by selling digital content such as lecture notes!",
+      url: `${process.env.NEXT_PUBLIC_BASE_URL}?referrer=${user.uid}`,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        navigator.clipboard.writeText(shareData.url);
+        toast.success(
+          "Referral link copied"
+        );
+      }
+    } catch (error:any) {
+      if (error.name === "AbortError") {
+        console.log(error)
+        return;
+      }
+      toast.error("Failed to share");
+      console.error("Error sharing:", error);
+    }
+  };
+
   return (
     <div className="w-1/2 md:w-1/4 font-inter flex flex-col gap-2">
       <div className=" bg-primary-200 text-white p-4 rounded space-y-4">
         <p className="font-bold">KSH. {walletBalance}</p>
-        <Link href={`/withdraw/${user.walletId}`} className="flex items-center gap-1 bg-accent-200 px-3 py-1 rounded-lg">
+        <Link
+          href={`/withdraw/${user.walletId}`}
+          className="flex items-center gap-1 bg-accent-200 px-3 py-1 rounded-lg"
+        >
           <p>Withdraw</p>
           <MdArrowForward className="w-5 h-5" />
         </Link>
@@ -53,15 +83,10 @@ const Balances = ({ user }: { user: User }) => {
         <div className="text-sm flex items-center flex-col gap-1">
           <p className="italic text-gray-500">Share to earn tokens</p>
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(
-                `${process.env.NEXT_PUBLIC_BASE_URL}?referrer=${user.uid}`
-              );
-              toast.success("Referral link copied");
-            }}
-            className="bg-accent-200 text-white px-3 py-1 rounded-lg"
+            onClick={handleShare}
+            className="flex gap-1 items-center bg-accent-200 text-white px-3 py-1 rounded-lg"
           >
-            Copy Referral Link
+            Share <IoMdShareAlt className="w-5 h-5" />
           </button>
           <Link
             href={`/tokens2cash/${user.uid}`}
