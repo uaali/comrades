@@ -1,0 +1,12 @@
+User-agent: *  
+
+Allow: /  
+
+Disallow: /dashboard  
+Disallow: /api/
+Disallow: /search/
+Disallow: /profile/
+Disallow: /withdraw/
+Disallow: /tokens2cash/
+
+Sitemap: https://comrades.tirigist.com/sitemap.xml

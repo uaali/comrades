@@ -21,6 +21,39 @@ const fetchContent = async (id: string) => {
   }
 };
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const content = await fetchContent(id);
+
+  if (!content) {
+    return {
+      title: "Content not found",
+      description: "The requested content could not be found.",
+    };
+  }
+
+  return {
+    title: content.title,
+    description: content.description,
+    openGraph: {
+      title: content.title,
+      description: content.description,
+      url: `https://comrades.tirigist.com/content/${content.contentId}`,
+      siteName: "Tirigist Comrades",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: content.title,
+      description: content.description,
+    },
+  };
+}
+
 const ContentPage = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const content = await fetchContent(id);
