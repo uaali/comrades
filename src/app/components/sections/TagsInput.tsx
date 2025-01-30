@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const RECOMMENDED_TAGS = ["lecture notes", "study guide", "past paper"];
+const RECOMMENDED_TAGS = ["lecture notes", "study guide", "past paper", "others"];
 const MAX_TAGS = 6;
 
 const TagsInput = ({

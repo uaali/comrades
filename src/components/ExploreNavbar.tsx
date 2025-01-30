@@ -57,6 +57,16 @@ const ExploreNavbar = ({
         >
           Study Guides
         </p>
+        <p
+          onClick={() => setCurrentCategory("others")}
+          className={`${
+            currentCategory == "others"
+              ? "text-primary-200"
+              : "text-[#86858E]"
+          } text-sm font-semibold tracking-wide hover:cursor-pointer`}
+        >
+          Others
+        </p>
       </div>
       {courses && !loading ? (
         <CourseSelection

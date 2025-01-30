@@ -31,51 +31,51 @@ export async function POST(request: Request) {
     const {preview, file, ...rest} = data;
     data = rest;
 
-    // //validate
-    // const validation = validateForm(data);
-    // if (validation !== true) {
-    //   return NextResponse.json(validation, { status: 400 });
-    // }
+    //validate
+    const validation = validateForm(data);
+    if (validation !== true) {
+      return NextResponse.json(validation, { status: 400 });
+    }
 
-    // // check if file follows guidelines
-    // const badTitle = isProfane(data.title);
-    // const badDescription = isProfane(data.description);
-    // const badTags = data.tags.some((tag: string) => isProfane(tag));
-    // if (badTitle || badDescription || badTags) {
-    //   return NextResponse.json("Content contains profanity", { status: 400 });
-    // }
+    // check if file follows guidelines
+    const badTitle = isProfane(data.title);
+    const badDescription = isProfane(data.description);
+    const badTags = data.tags.some((tag: string) => isProfane(tag));
+    if (badTitle || badDescription || badTags) {
+      return NextResponse.json("Content contains profanity", { status: 400 });
+    }
 
-    // //detect people
-    // if (!vision.faceDetection) {
-    //   throw new Error("Vision API client not properly initialized");
-    // }
-    // const [result] = await vision.faceDetection(previewBuffer);
-    // const faces = result.faceAnnotations || [];
-    // if (faces.length > 0) {
-    //   return NextResponse.json(
-    //     "Please change the preview. Images with people not allowed",
-    //     {
-    //       status: 400,
-    //     }
-    //   );
-    // }
-    // // Check for explicit content
-    // const [safeSearchResult] = await vision.safeSearchDetection(previewBuffer);
-    // const safeSearch = safeSearchResult.safeSearchAnnotation;
+    //detect people
+    if (!vision.faceDetection) {
+      throw new Error("Vision API client not properly initialized");
+    }
+    const [result] = await vision.faceDetection(previewBuffer);
+    const faces = result.faceAnnotations || [];
+    if (faces.length > 0) {
+      return NextResponse.json(
+        "Please change the preview. Images with people not allowed",
+        {
+          status: 400,
+        }
+      );
+    }
+    // Check for explicit content
+    const [safeSearchResult] = await vision.safeSearchDetection(previewBuffer);
+    const safeSearch = safeSearchResult.safeSearchAnnotation;
 
-    // if (
-    //   safeSearch &&
-    //   (safeSearch.adult === "LIKELY" ||
-    //     safeSearch.adult === "VERY_LIKELY" ||
-    //     safeSearch.violence === "LIKELY" ||
-    //     safeSearch.violence === "VERY_LIKELY" ||
-    //     safeSearch.racy === "LIKELY" ||
-    //     safeSearch.racy === "VERY_LIKELY")
-    // ) {
-    //   return NextResponse.json("Image contains inappropriate content", {
-    //     status: 400,
-    //   });
-    // }
+    if (
+      safeSearch &&
+      (safeSearch.adult === "LIKELY" ||
+        safeSearch.adult === "VERY_LIKELY" ||
+        safeSearch.violence === "LIKELY" ||
+        safeSearch.violence === "VERY_LIKELY" ||
+        safeSearch.racy === "LIKELY" ||
+        safeSearch.racy === "VERY_LIKELY")
+    ) {
+      return NextResponse.json("Image contains inappropriate content", {
+        status: 400,
+      });
+    }
 
     //check usage quota
     const hasQuota = await checkQuota(data.publisher, previewSize + fileSize);
