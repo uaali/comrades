@@ -21,21 +21,21 @@ export async function POST(request: Request) {
   try {
     let data: UploadFormDataWithFiles = await request.json();
 
+    //validate
+    const validation = validateForm(data);
+    if (validation !== true) {
+      return NextResponse.json(validation, { status: 400 });
+    }
+
     //get sizes
     const previewSize = getBase64Size(data.preview as string);
     const fileSize = getBase64Size(data.file as string);
 
     //change files to buffer
     const previewBuffer = Buffer.from(data.preview as string, "base64");
-    const fileBuffer = Buffer.from(data.file as string, "base64")
-    const {preview, file, ...rest} = data;
+    const fileBuffer = Buffer.from(data.file as string, "base64");
+    const { preview, file, ...rest } = data;
     data = rest;
-
-    //validate
-    const validation = validateForm(data);
-    if (validation !== true) {
-      return NextResponse.json(validation, { status: 400 });
-    }
 
     // check if file follows guidelines
     const badTitle = isProfane(data.title);
@@ -105,7 +105,6 @@ export async function POST(request: Request) {
     });
 
     revalidatePath("/");
-
 
     return NextResponse.json({ message: "Success" }, { status: 200 });
   } catch (error) {
