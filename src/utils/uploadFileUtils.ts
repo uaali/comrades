@@ -1,4 +1,4 @@
-import { UploadFormDataWithFiles } from "@/types";
+import { UploadFormData } from "@/types";
 import JSZip from "jszip";
 
 export const compressFiles = async (files: File[]): Promise<File> => {
@@ -14,7 +14,7 @@ export const compressFiles = async (files: File[]): Promise<File> => {
   return new File([content], "content.zip", { type: "application/zip" });
 };
 
-export const validateForm = (data: UploadFormDataWithFiles) => {
+export const validateForm = (data: UploadFormData) => {
   if (!data.title) {
     return "Title is required";
   }
@@ -29,12 +29,6 @@ export const validateForm = (data: UploadFormDataWithFiles) => {
   }
   if (data.description.length > 500) {
     return "Description is too long (500 characters max)";
-  }
-  if (!data.file) {
-    return "Content file(s) are required";
-  }
-  if (!data.preview) {
-    return "Preview image is required";
   }
   if (data.tags.length === 0) {
     return "At least one tag is required";

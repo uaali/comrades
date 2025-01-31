@@ -1,13 +1,15 @@
 import { checkQuota, uploadContent } from "@/utils/content";
 import { getBase64Size } from "@/utils/getBase64Size";
 import { validateForm } from "@/utils/uploadFileUtils";
-import { createDocument, db } from "@/lib/firebase/admin";
-import { UploadFormDataWithFiles } from "@/types";
+import { createDocument, db, storage } from "@/lib/firebase/admin";
+import { UploadFormData } from "@/types";
 import { ImageAnnotatorClient } from "@google-cloud/vision";
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { isProfane } from "no-profanity";
 import { revalidatePath } from "next/cache";
+import { getDownloadURL } from "firebase-admin/storage";
+import { Timestamp } from "firebase-admin/firestore";
 
 const vision = new ImageAnnotatorClient({
   credentials: {
@@ -19,39 +21,66 @@ const vision = new ImageAnnotatorClient({
 
 export async function POST(request: Request) {
   try {
-    let data: UploadFormDataWithFiles = await request.json();
+    let data = await request.json();
+    const headers = request.headers;
+    const authToken = headers.get("Authorization");
+    if (!authToken) {
+      return NextResponse.json("Unauthorized", { status: 401 });
+    }
+    const userId = authToken.split(" ")[1];
+
+    const {
+      contentId,
+      title,
+      price,
+      description,
+      course,
+      tags,
+      courseExisted,
+    } = data;
 
     //validate
-    const validation = validateForm(data);
-    if (validation !== true) {
-      return NextResponse.json(validation, { status: 400 });
+    if (
+      !contentId ||
+      !title ||
+      !price ||
+      !description ||
+      !course ||
+      !tags ||
+      !courseExisted
+    ) {
+      return NextResponse.json("Missing required fields", { status: 400 });
     }
 
-    //get sizes
-    const previewSize = getBase64Size(data.preview as string);
-    const fileSize = getBase64Size(data.file as string);
+    //validate if content is for User
+    const previewRef = storage.file(`uploads/${userId}/${contentId}/preview`);
+    const fileRef = storage.file(`uploads/${userId}/${contentId}/file`);
 
-    //change files to buffer
-    const previewBuffer = Buffer.from(data.preview as string, "base64");
-    const fileBuffer = Buffer.from(data.file as string, "base64");
-    const { preview, file, ...rest } = data;
-    data = rest;
+    if (!previewRef.exists() || !fileRef.exists()) {
+      return NextResponse.json("Unauthorized", { status: 401 });
+    }
 
-    // check if file follows guidelines
+    // check if file has profane text
     const badTitle = isProfane(data.title);
     const badDescription = isProfane(data.description);
     const badTags = data.tags.some((tag: string) => isProfane(tag));
     if (badTitle || badDescription || badTags) {
+      await previewRef.delete();
+      await fileRef.delete();
       return NextResponse.json("Content contains profanity", { status: 400 });
     }
+
+    const previewUrl = await getDownloadURL(previewRef);
 
     //detect people
     if (!vision.faceDetection) {
       throw new Error("Vision API client not properly initialized");
     }
-    const [result] = await vision.faceDetection(previewBuffer);
+    const [result] = await vision.faceDetection(previewUrl);
     const faces = result.faceAnnotations || [];
     if (faces.length > 0) {
+      await previewRef.delete();
+      await fileRef.delete();
       return NextResponse.json(
         "Please change the preview. Images with people not allowed",
         {
@@ -60,7 +89,7 @@ export async function POST(request: Request) {
       );
     }
     // Check for explicit content
-    const [safeSearchResult] = await vision.safeSearchDetection(previewBuffer);
+    const [safeSearchResult] = await vision.safeSearchDetection(previewUrl);
     const safeSearch = safeSearchResult.safeSearchAnnotation;
 
     if (
@@ -72,15 +101,11 @@ export async function POST(request: Request) {
         safeSearch.racy === "LIKELY" ||
         safeSearch.racy === "VERY_LIKELY")
     ) {
+      await previewRef.delete();
+      await fileRef.delete();
       return NextResponse.json("Image contains inappropriate content", {
         status: 400,
       });
-    }
-
-    //check usage quota
-    const hasQuota = await checkQuota(data.publisher, previewSize + fileSize);
-    if (!hasQuota) {
-      return NextResponse.json("Storage limit exceeded", { status: 400 });
     }
 
     //save course
@@ -98,11 +123,7 @@ export async function POST(request: Request) {
     delete data.courseExisted;
 
     //save files to storage
-    await uploadContent({
-      data,
-      previewFile: previewBuffer,
-      file: fileBuffer,
-    });
+
 
     revalidatePath("/");
 

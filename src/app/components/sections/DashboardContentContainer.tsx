@@ -42,8 +42,9 @@ const DashboardContentContainer = ({
         />
       )}
 
-      {selectedDeleteId && (
+      {selectedDeleteId && selectedContent && (
         <DeleteContentModal
+          userId={selectedContent?.publisher}
           contentId={selectedDeleteId}
           openModal={deleteContentModalOpen}
           setOpenModal={setDeleteContentModalOpen}
@@ -66,6 +67,7 @@ const DashboardContentContainer = ({
                 />
                 <MdDelete
                   onClick={() => {
+                    setSelectedContent(item);
                     setSelectedDeleteId(item.id);
                     setDeleteContentModalOpen(true);
                   }}

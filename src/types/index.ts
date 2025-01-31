@@ -19,12 +19,7 @@ export interface UploadFormData {
   course: string;
   tags: string[];
   courseExisted?: boolean;
-}
-
-export interface UploadFormDataWithFiles extends UploadFormData {
-  publisher: string;
-  file?: File | string;
-  preview?: File | string;
+  publisher?: string;
 }
 
 export interface UserQuota {

@@ -7,11 +7,10 @@ import TagsInput from "../components/sections/TagsInput";
 import { UploadFormData } from "@/types";
 import toast from "react-hot-toast";
 import { compressFiles, validateForm } from "../../utils/uploadFileUtils";
-import { toBase64 } from "../../utils/toBase64";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db, provider } from "@/lib/firebase/config";
+import { auth, db, provider, storage } from "@/lib/firebase/config";
 import CourseSelection from "../components/ui/CourseSelection";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, serverTimestamp, setDoc } from "firebase/firestore";
 import {
   useCollectionOnce,
   useDocumentData,
@@ -20,6 +19,8 @@ import { useRouter } from "next/navigation";
 import { signInWithPopup } from "firebase/auth";
 import StorageUsage from "../components/ui/StorageUsage";
 import BuyStorage from "../components/modals/BuyStorage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { createHash } from "crypto";
 
 const baseStyle = {
   height: "200px",
@@ -65,7 +66,7 @@ const UploadPage = () => {
   const router = useRouter();
 
   const handleSubmit = async () => {
-    const newFormData = { ...formData, course: selectedCourse };
+    let newFormData = { ...formData, course: selectedCourse };
     if (!user) {
       toast.error("You need to be logged in to upload content");
       await signInWithPopup(auth, provider);
@@ -80,15 +81,8 @@ const UploadPage = () => {
     toast.loading("Compressing files...");
     const compressedFile = await compressFiles(files);
     toast.dismiss();
-    const data = {
-      ...newFormData,
-      publisher: user?.uid,
-      file: await toBase64(compressedFile),
-      preview: await toBase64(previewFile),
-      fileMimeType: compressedFile.type,
-      previewMimeType: previewFile.type,
-    };
-    const validation = validateForm(data);
+
+    const validation = validateForm(newFormData);
     if (validation !== true) {
       toast.error(validation);
       setSubmitting(false);
@@ -97,22 +91,59 @@ const UploadPage = () => {
 
     try {
       toast.loading("Uploading content...");
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-      toast.dismiss();
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || "Failed to upload content");
+      const contentId = doc(collection(db, "uploads")).id;
+
+      const fileRef = ref(storage, `uploads/${user.uid}/${contentId}/file`);
+      await uploadBytes(fileRef, compressedFile);
+
+      const previewRef = ref(
+        storage,
+        `uploads/${user.uid}/${contentId}/preview`
+      );
+      await uploadBytes(previewRef, previewFile);
+
+
+      //save course
+      if (newFormData.course !== "" && formData.courseExisted === false) {
+        console.log("hi");
+        const courseRef = doc(
+          db,
+          "courses",
+          createHash("sha256").update(newFormData.course).digest("hex")
+        );
+        await setDoc(courseRef, {
+          name: newFormData.course,
+        });
       }
+
+      const previewUrl = await getDownloadURL(previewRef);
+
+      delete newFormData.courseExisted;
+
+      console.log({
+        downloads: 1,
+        publisher: user.uid,
+        previewUrl,
+        ...newFormData,
+        createdAt: serverTimestamp(),
+      });
+      //save to firestore
+      const docRef = doc(db, "uploads", contentId);
+      await setDoc(docRef, {
+        downloads: 0,
+        publisher: user.uid,
+        previewUrl,
+        ...newFormData,
+        createdAt: serverTimestamp(),
+      });
+
+      toast.dismiss();
+
       toast.success("Content uploaded successfully!");
       router.push("/dashboard");
     } catch (error) {
       toast.dismiss();
-      toast.error(
-        error instanceof Error ? error.message : "Failed to upload content"
-      );
+      toast.error("Failed to upload content");
       setSubmitting(false);
     }
   };
@@ -219,6 +250,9 @@ const UploadPage = () => {
               selectedCourse={selectedCourse}
               setSearchValue2={(searchValue) => setSelectedCourse(searchValue)}
               courses={courses.docs.map((course) => course.data().name)}
+              setCourseExisted={(value) =>
+                setFormData({ ...formData, courseExisted: value })
+              }
             />
           ) : (
             <div className="p-3 bg-gray-200 rounded-lg animate-pulse"></div>
