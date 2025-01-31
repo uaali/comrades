@@ -45,7 +45,6 @@ const Balances = ({ user }: { user: User }) => {
       }
     } catch (error:any) {
       if (error.name === "AbortError") {
-        console.log(error)
         return;
       }
       toast.error("Failed to share");

@@ -45,11 +45,13 @@ export async function generateMetadata({
       url: `https://comrades.tirigist.com/content/${content.contentId}`,
       siteName: "Tirigist Comrades",
       type: "website",
+      images: [content.previewUrl],
     },
     twitter: {
       card: "summary_large_image",
       title: content.title,
       description: content.description,
+      images: [content.previewUrl],
     },
   };
 }

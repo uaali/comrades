@@ -10,14 +10,35 @@ import UploadBanner from "../components/sections/UploadBanner";
 import { Content } from "@/types";
 import DashboardContentContainer from "../components/sections/DashboardContentContainer";
 import toast from "react-hot-toast";
-import { collection, doc, getDoc, getDocs, orderBy, query, where } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
+import { useSearchParams } from "next/navigation";
 
 const Dashboard = () => {
   const [user, loading, error] = useAuthState(auth);
   const [fetchedUser, setFetchedUser] = useState<User | null>();
-  const [currentCategory, setCurrentCategory] = useState("purchased");
+  const [currentCategory, setCurrentCategory] = useState("uploaded");
   const [uploadedContent, setUploadedContent] = useState<null | Content[]>();
   const [purchasedContent, setPurchasedContent] = useState<null | Content[]>();
+
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
+
+  useEffect(() => {
+    if (!tab) return;
+    if (tab === "uploaded") {
+      setCurrentCategory("uploaded");
+    } else if (tab === "purchased") {
+      setCurrentCategory("purchased");
+    }
+  }, []);
 
   useEffect(() => {
     if (!user || error) return;
@@ -100,14 +121,17 @@ const Dashboard = () => {
         const fetchContentPromises = contentIds.map((contentId) =>
           getDoc(doc(db, "uploads", contentId))
         );
-        const contentSnapshots = await Promise.all(fetchContentPromises);  
+        const contentSnapshots = await Promise.all(fetchContentPromises);
         const content = contentSnapshots
-        .filter((snapshot) => snapshot.exists())
-        .map((snapshot) => ({
-          id: snapshot.id,
-          ...snapshot.data(),
-          createdAt: snapshot.data().createdAt.toDate(),
-        } as Content));
+          .filter((snapshot) => snapshot.exists())
+          .map(
+            (snapshot) =>
+              ({
+                id: snapshot.id,
+                ...snapshot.data(),
+                createdAt: snapshot.data().createdAt.toDate(),
+              } as Content)
+          );
         setPurchasedContent(content);
       } catch (error) {
         console.error(error);

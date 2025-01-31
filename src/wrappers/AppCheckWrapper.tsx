@@ -18,7 +18,7 @@ const AppCheckWrapper = () => {
         isTokenAutoRefreshEnabled: true,
       });
     } catch (error) {
-      console.log(error);
+      return;
     }
   }, []);
   return null;

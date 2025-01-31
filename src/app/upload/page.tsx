@@ -105,7 +105,6 @@ const UploadPage = () => {
 
       //save course
       if (newFormData.course !== "" && formData.courseExisted === false) {
-        console.log("hi");
         const courseRef = doc(
           db,
           "courses",
@@ -119,14 +118,7 @@ const UploadPage = () => {
       const previewUrl = await getDownloadURL(previewRef);
 
       delete newFormData.courseExisted;
-
-      console.log({
-        downloads: 1,
-        publisher: user.uid,
-        previewUrl,
-        ...newFormData,
-        createdAt: serverTimestamp(),
-      });
+      
       //save to firestore
       const docRef = doc(db, "uploads", contentId);
       await setDoc(docRef, {
@@ -140,7 +132,7 @@ const UploadPage = () => {
       toast.dismiss();
 
       toast.success("Content uploaded successfully!");
-      router.push("/dashboard");
+      router.push("/dashboard?tab=uploaded");
     } catch (error) {
       toast.dismiss();
       toast.error("Failed to upload content");
