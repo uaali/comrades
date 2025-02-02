@@ -26,4 +26,4 @@ const SUPPORTED_MIME_TYPES = new Set([
   "text/plain"
 ]);
 
-module.exports = SUPPORTED_MIME_TYPES;
+export default SUPPORTED_MIME_TYPES;

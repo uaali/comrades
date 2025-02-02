@@ -1,45 +1,51 @@
-const functions = require("firebase-functions/v1");
-const {
+import * as functions from "firebase-functions/v1";
+import {
   onDocumentCreated,
   onDocumentUpdated,
-} = require("firebase-functions/v2/firestore");
-const {
+} from "firebase-functions/v2/firestore";
+import {
   onObjectFinalized,
   onObjectDeleted,
-} = require("firebase-functions/v2/storage");
-const { defineSecret } = require("firebase-functions/params");
-const { setGlobalOptions } = require("firebase-functions/v2");
-const { ImageAnnotatorClient } = require("@google-cloud/vision");
-const admin = require("firebase-admin");
-const { isProfane } = require("no-profanity");
-const { Timestamp } = require("firebase-admin/firestore");
-const { error } = require("firebase-functions/logger");
-const { PdfCounter } = require("page-count");
-const { genkit } = require("genkit");
-const { default: vertexAI, gemini15Pro } = require("@genkit-ai/vertexai");
-const SUPPORTED_MIME_TYPES = require("./supportedMimes");
-const { Readable } = require("stream");
-const { getVideoDurationInSeconds } = require("get-video-duration");
+} from "firebase-functions/v2/storage";
+import { defineSecret } from "firebase-functions/params";
+import { setGlobalOptions } from "firebase-functions/v2";
+import { ImageAnnotatorClient } from "@google-cloud/vision";
+import * as admin from "firebase-admin";
+import { isProfane } from "no-profanity";
+import { Timestamp } from "firebase-admin/firestore";
+import { error } from "firebase-functions/logger";
+import { PdfCounter } from "page-count";
+import { genkit } from "genkit";
+import { Readable } from "stream";
+import { getVideoDurationInSeconds } from "get-video-duration";
+import SUPPORTED_MIME_TYPES from "./supportedMimes";
+import { gemini15Pro, vertexAI } from "@genkit-ai/vertexai";
 
-// Set global options (e.g., region)
+// Set global options
 setGlobalOptions({ region: "us-central1" });
 
+// Define secrets
 const intasendApiKey = defineSecret("INTASEND_SECRET_API_KEY");
 const authFirebasePrivateKey = defineSecret("AUTH_FIREBASE_PRIVATE_KEY");
 const authFirebaseClientEmail = defineSecret("AUTH_FIREBASE_CLIENT_EMAIL");
 const authFirebaseProjectId = defineSecret("AUTH_FIREBASE_PROJECT_ID");
 
+// Initialize Firebase
 admin.initializeApp();
 const db = admin.firestore();
 const storage = admin.storage();
 const bucket = storage.bucket();
 
+// Constants
+const FREE_QUOTA = 2.5 * 1024 * 1024 * 1024;
+const MAX_DOC_SIZE_BYTES = 50 * 1024 * 1024;
+const MAX_PDF_PAGES = 1000;
+
 // 1. Create user document on authentication
 exports.createUserDocument = functions
   .runWith({ secrets: [intasendApiKey] })
   .auth.user()
-  .onCreate(async (user) => {
-    const FREE_QUOTA = 2.5 * 1024 * 1024 * 1024;
+  .onCreate(async (user: admin.auth.UserRecord) => {
     try {
       const response = await fetch(
         "https://payment.intasend.com/api/v1/wallets/",
@@ -110,6 +116,8 @@ exports.onUploadDocumentCreated = onDocumentCreated(
   async (event) => {
     try {
       const snapshot = event.data;
+      if (!snapshot) return;
+
       const document = snapshot.data();
       const documentId = event.params.documentId;
       const userId = document.publisher;
@@ -122,7 +130,7 @@ exports.onUploadDocumentCreated = onDocumentCreated(
         projectId: authFirebaseProjectId.value(),
       });
 
-      const sendNotification = async (message) => {
+      const sendNotification = async (message: string): Promise<void> => {
         const notification = {
           title: `Document deleted`,
           message: message,
@@ -135,7 +143,7 @@ exports.onUploadDocumentCreated = onDocumentCreated(
         await notificationDocRef.set(notification);
       };
 
-      const deleteAllResources = async () => {
+      const deleteAllResources = async (): Promise<void> => {
         await bucket.file(`uploads/${userId}/${documentId}/file`).delete();
         await bucket.file(`uploads/${userId}/${documentId}/preview`).delete();
         await db.collection("uploads").doc(documentId).delete();
@@ -145,7 +153,7 @@ exports.onUploadDocumentCreated = onDocumentCreated(
       const hasProfanity =
         isProfane(document.title) ||
         isProfane(document.description) ||
-        (document.tags && document.tags.some((tag) => isProfane(tag)));
+        (document.tags && document.tags.some((tag: string) => isProfane(tag)));
 
       if (hasProfanity) {
         await deleteAllResources();
@@ -193,9 +201,6 @@ exports.onUploadDocumentCreated = onDocumentCreated(
   }
 );
 
-const MAX_DOC_SIZE_BYTES = 50 * 1024 * 1024;
-const MAX_PDF_PAGES = 1000;
-
 // 3. Increase user quota && generate summary when file is uploaded
 exports.onFileUploaded = onObjectFinalized(
   { bucket: storage.bucket().name },
@@ -206,7 +211,7 @@ exports.onFileUploaded = onObjectFinalized(
       if (pathParts[0] !== "uploads" || pathParts.length !== 4) return;
 
       const userId = pathParts[1];
-      const fileSize = parseInt(event.data.size);
+      const fileSize = Number(event.data.size);
       const fileType = event.data.contentType;
       const contentId = pathParts[2];
 
@@ -222,7 +227,7 @@ exports.onFileUploaded = onObjectFinalized(
         return null;
       }
 
-      if (!SUPPORTED_MIME_TYPES.has(fileType)) {
+      if (!fileType || !SUPPORTED_MIME_TYPES.has(fileType)) {
         return null;
       }
       if (
@@ -235,7 +240,7 @@ exports.onFileUploaded = onObjectFinalized(
       if (fileType === "application/pdf") {
         const file = bucket.file(event.data.name);
         const [pdfBuffer] = await file.download();
-        pdfPages = PdfCounter.count(pdfBuffer);
+        pdfPages = await PdfCounter.count(pdfBuffer);
         if (pdfPages > MAX_PDF_PAGES) {
           return null;
         }
@@ -263,17 +268,24 @@ exports.onFileUploaded = onObjectFinalized(
     `,
         },
       ]);
-
+      if (!results.message) {
+        return null;
+      }
       const summary = results.message.content[0].text;
       const totalTokensUsed = results.usage.totalTokens;
+      if (!totalTokensUsed) {
+        return null;
+      }
       let equivalentChatGPTTokens = totalTokensUsed * 17;
 
-      //pricing(vertex ai)
       if (fileType === "application/pdf") {
         equivalentChatGPTTokens += pdfPages * 53;
       }
       if (fileType === "text/plain") {
         const inputTokens = results.usage.inputTokens;
+        if (!inputTokens) {
+          return null;
+        }
         const characters = inputTokens * 4;
         equivalentChatGPTTokens += Number((characters * 0.05).toFixed(0));
       }
@@ -282,13 +294,13 @@ exports.onFileUploaded = onObjectFinalized(
       }
       if (fileType.startsWith("video/")) {
         const file = bucket.file(event.data.name);
-        const [videoBuffer]= await file.download();
+        const [videoBuffer] = await file.download();
         const readableStream = Readable.from(videoBuffer);
         const duration = await getVideoDurationInSeconds(readableStream);
         equivalentChatGPTTokens += duration * 53;
       }
       if (fileType.startsWith("audio/")) {
-        equivalentChatGPTTokens + 96000;
+        equivalentChatGPTTokens += 96000;
       }
 
       const uploadRef = db.collection("uploads").doc(contentId);
@@ -300,8 +312,10 @@ exports.onFileUploaded = onObjectFinalized(
         summary: summary,
         tokensUsed: equivalentChatGPTTokens,
       });
-    } catch (error) {
-      console.error("Error here bro:", error);
+      return null;
+    } catch (err) {
+      console.error("Error here bro:", err);
+      return null;
     }
   }
 );
@@ -317,15 +331,15 @@ exports.onFileDeleted = onObjectDeleted(
       if (pathParts[0] !== "uploads" || pathParts.length !== 4) return;
 
       const userId = pathParts[1];
-      const fileSize = parseInt(event.data.size);
+      const fileSize = Number(event.data.size);
 
       const quotaRef = db.collection("userQuotas").doc(userId);
 
       await quotaRef.update({
         totalStorageUsed: admin.firestore.FieldValue.increment(-fileSize),
       });
-    } catch (error) {
-      console.error("Error updating user quota:", error);
+    } catch (err) {
+      console.error("Error updating user quota:", err);
     }
   }
 );
@@ -337,20 +351,20 @@ exports.onUploadDocumentUpdated = onDocumentUpdated(
   },
   async (event) => {
     try {
+      if (!event.data) return null;
       const document = event.data.after.data();
       const documentId = event.params.documentId;
       const userId = document.publisher;
 
-      const previousTitle = event.data.before.data().title;
-      const previousDescription = event.data.before.data().description;
+      const previousDocument = event.data.before.data();
       if (
-        document.title === previousTitle &&
-        document.description === previousDescription
+        document.title === previousDocument.title &&
+        document.description === previousDocument.description
       ) {
         return null;
       }
 
-      const sendNotification = async (message) => {
+      const sendNotification = async (message: string): Promise<void> => {
         const notification = {
           title: `Document deleted`,
           message: message,
@@ -363,7 +377,7 @@ exports.onUploadDocumentUpdated = onDocumentUpdated(
         await notificationDocRef.set(notification);
       };
 
-      const deleteAllResources = async () => {
+      const deleteAllResources = async (): Promise<void> => {
         await bucket.file(`uploads/${userId}/${documentId}/file`).delete();
         await bucket.file(`uploads/${userId}/${documentId}/preview`).delete();
         await db.collection("uploads").doc(documentId).delete();
@@ -375,10 +389,12 @@ exports.onUploadDocumentUpdated = onDocumentUpdated(
       if (hasProfanity) {
         await deleteAllResources();
         await sendNotification("Document deleted due to profanity");
-        return;
+        return null;
       }
+      return null;
     } catch (err) {
       error("Error updating document:", err);
+      return null;
     }
   }
 );
