@@ -26,6 +26,8 @@ export function DeleteContentModal({
     const docRef = doc(db, "uploads", contentId);
     const fileRef = ref(storage, `uploads/${userId}/${contentId}/file`);
     const previewRef = ref(storage, `uploads/${userId}/${contentId}/preview`);
+    const summaryRef = doc(db, "summaries", contentId);
+    await deleteDoc(summaryRef);
     await deleteDoc(docRef);
     await deleteObject(fileRef);
     await deleteObject(previewRef);

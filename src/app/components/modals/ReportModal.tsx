@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { Modal } from "flowbite-react";
+import toast from "react-hot-toast";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase/config";
 
 // Define types for our reports
 type ReportType = "upload" | "review";
@@ -34,15 +37,38 @@ interface ReportModalProps {
   userId: string;
 }
 
-const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, type }) => {
+const ReportModal: React.FC<ReportModalProps> = ({
+  isOpen,
+  onClose,
+  type,
+  id,
+  userId,
+}) => {
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [customDescription, setCustomDescription] = useState<string>("");
   const [showCustomInput, setShowCustomInput] = useState<boolean>(false);
 
   const reportCases = type === "upload" ? uploadReportCases : reviewReportCases;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      toast.loading("Reporting ...");
+      const reason =
+        selectedReason === "custom" ? customDescription : selectedReason;
+      await addDoc(collection(db, "reports"), {
+        id,
+        userId,
+        reason,
+        type,
+        createdAt: serverTimestamp(),
+      });
+      toast.dismiss();
+      toast.success("Report submitted successfully");
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Failed to report");
+    }
     handleClose();
   };
 
@@ -117,6 +143,7 @@ const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, type }) => {
                 onChange={(e) => setCustomDescription(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                 rows={4}
+                maxLength={300}
                 required={showCustomInput}
               />
             </div>
