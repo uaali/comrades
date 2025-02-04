@@ -1,3 +1,7 @@
+import ReportContent from "@/app/components/sections/ReportContent";
+import Reviews from "@/app/components/sections/Reviews";
+import Summary from "@/app/components/sections/Summary";
+import VerifyAsOwner from "@/app/components/sections/VerifyAsOwner";
 import IntasendBadge from "@/app/components/ui/IntasendBadge";
 import PurchaseContentBtn from "@/app/components/ui/PurchaseContentBtn";
 import { getDocument } from "@/lib/firebase/admin";
@@ -42,7 +46,7 @@ export async function generateMetadata({
     openGraph: {
       title: content.title,
       description: content.description,
-      url: `https://comrades.tirigist.com/content/${content.contentId}`,
+      url: `https://comrades.tirigist.com/content/${id}`,
       siteName: "Tirigist Comrades",
       type: "website",
       images: [content.previewUrl],
@@ -67,62 +71,79 @@ const ContentPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     description,
     price,
     course,
-    contentId,
     tags,
     publisher,
     previewUrl,
     createdAt,
+    verified,
+    summaryAvailable,
+    pendingHumanVerification,
   } = content;
   return (
-    <div className="p-4 md:px-6 font-inter flex flex-col md:flex-row">
-      <div className="space-y-4 w-full md:w-1/2 lg:w-1/3 flex flex-col items-center">
-        <Image
-          src={previewUrl}
-          className="w-full h-auto border-primary-200 border rounded"
-          width={400}
-          height={400}
-          alt={title}
-        />
-        <div className="flex w-full justify-between items-center">
-          <p className="font-bold text-primary-200 text-3xl self-end">
-            KSh. {price}
-          </p>
-          <PurchaseContentBtn contentId={contentId} />
-        </div>
-        <IntasendBadge />
-      </div>
-      <div className="w-full md:w-1/2 lg:w-2/3 my-4 md:my-0 md:pl-4">
-        <div className="space-y-3">
-          <p className="text-2xl font-poppinsB font-bold">{title}</p>
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-600 font-bold tracking-wide">
-              {createdAt.toLocaleDateString()}
+    <div className="p-4 md:px-6 font-inter">
+      <div className="flex flex-col md:flex-row">
+        <div className="space-y-4 w-full md:w-1/2 lg:w-1/3 flex flex-col items-center">
+          <Image
+            src={previewUrl}
+            className="w-full h-auto border-primary-200 border rounded"
+            width={400}
+            height={400}
+            alt={title}
+          />
+          <div className="flex w-full justify-between items-center">
+            <p className="font-bold text-primary-200 text-3xl self-end">
+              KSh. {price}
             </p>
-            <Link href={`/profile/${publisher}`}>
-              <p className="text-primary-200 text-sm hover:underline">
-                See my other content
+            <PurchaseContentBtn publisherId={publisher} contentId={id} />
+          </div>
+          <IntasendBadge />
+        </div>
+        <div className="w-full md:w-1/2 lg:w-2/3 my-4 md:my-0 md:pl-4">
+          <div className="space-y-3">
+            <div className="flex gap-2 flex-wrap items-end">
+              <p className="text-2xl font-poppinsB font-bold">{title}</p>
+              <ReportContent contentId={id} />
+            </div>
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-gray-600 font-bold tracking-wide">
+                {createdAt.toLocaleDateString()}
               </p>
-            </Link>
+              <Link href={`/profile/${publisher}`}>
+                <p className="text-primary-200 text-sm hover:underline">
+                  See my other content
+                </p>
+              </Link>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {tags.map((tag) => (
+                <span key={tag} className="text-gray-800">
+                  #{tag}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {tags.map((tag) => (
-              <span key={tag} className="text-gray-800">
-                #{tag}
-              </span>
-            ))}
+          {!verified && (
+            <VerifyAsOwner
+              publisher={publisher}
+              contentId={id}
+              summaryAvailable={summaryAvailable}
+              pendingHumanVerification={pendingHumanVerification}
+            />
+          )}
+          <Summary contentId={id} summaryPurchased={verified} />
+          <div className="mt-2">
+            <p className="font-bold tracking-wide font-poppins">Description</p>
+            <p>{description}</p>
           </div>
+          {course !== "" && (
+            <div className="mt-5">
+              <p className="font-bold tracking-wide font-poppins">Course</p>
+              <p>{course}</p>
+            </div>
+          )}
         </div>
-        <div className="mt-5">
-          <p className="font-bold tracking-wide font-poppins">Description</p>
-          <p>{description}</p>
-        </div>
-        {course !== "" && (
-          <div className="mt-5">
-            <p className="font-bold tracking-wide font-poppins">Course</p>
-            <p>{course}</p>
-          </div>
-        )}
       </div>
+      <Reviews contentId={id} />
     </div>
   );
 };

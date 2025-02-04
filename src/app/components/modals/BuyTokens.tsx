@@ -109,7 +109,7 @@ const BuyTokens = ({
                   </div>
                   <div className="text-xs text-gray-600 flex items-center gap-1">
                     <FaCheck className="text-green-500" size={12} />
-                    {bundle.questions} questions
+                    ≈ {bundle.questions} questions
                   </div>
                 </div>
                 <div className="mt-2 text-xs text-gray-500 leading-tight">

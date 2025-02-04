@@ -10,8 +10,16 @@ import { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import toast from "react-hot-toast";
 
-const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
-  const [status, setStatus] = useState<'loading' | 'purchase' | 'purchasing' | 'download' | 'checkout'>('loading');
+const PurchaseContentBtn = ({
+  contentId,
+  publisherId,
+}: {
+  contentId: string;
+  publisherId: string;
+}) => {
+  const [status, setStatus] = useState<
+    "loading" | "purchase" | "purchasing" | "download" | "checkout"
+  >("loading");
   const [downloadURL, setDownloadURL] = useState<string | null>(null);
   const [checkoutLink, setCheckoutLink] = useState<string | null>(null);
   const [user, authLoading] = useAuthState(auth);
@@ -21,29 +29,32 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
     const checkPurchaseAndGetUrl = async () => {
       // Don't do anything while auth is loading
       if (authLoading) return;
-      
+
       // If no user, set to purchase state
       if (!user) {
-        setStatus('purchase');
+        setStatus("purchase");
         return;
       }
 
       try {
-        const purchaseRef = doc(db, `uploads/${contentId}/purchases/${user.uid}`);
+        const purchaseRef = doc(
+          db,
+          `uploads/${contentId}/purchases/${user.uid}`
+        );
         const purchaseSnap = await getDoc(purchaseRef);
-        
+
         if (purchaseSnap.exists()) {
-          const fileRef = ref(storage, `uploads/${contentId}/file`);
+          const fileRef = ref(storage, `uploads/${publisherId}/${contentId}/file`);
           const url = await getDownloadURL(fileRef);
           setDownloadURL(url);
-          setStatus('download');
+          setStatus("download");
         } else {
-          setStatus('purchase');
+          setStatus("purchase");
         }
       } catch (error) {
-        console.error('Error in check:', error);
+        console.error("Error in check:", error);
         toast.error("Error checking content status");
-        setStatus('purchase');
+        setStatus("purchase");
       }
     };
 
@@ -69,7 +80,7 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
       await signInWithPopup(auth, provider);
       return;
     }
-    setStatus('purchasing');
+    setStatus("purchasing");
     const toastId = toast.loading("Redirecting you in a few...");
     try {
       const response = await fetch("/api/intasend/purchase/get-link", {
@@ -84,21 +95,21 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
         throw new Error(data.errors || data.error);
       }
       setCheckoutLink(data.checkoutLink);
-      setStatus('checkout');
+      setStatus("checkout");
       router.push(data.checkoutLink);
     } catch (error) {
       toast.error("Error purchasing content");
-      setStatus('purchase');
+      setStatus("purchase");
     } finally {
       toast.dismiss(toastId);
     }
   };
 
   // Show loading state while auth is loading
-  if (authLoading || status === 'loading') {
+  if (authLoading || status === "loading") {
     return (
-      <button 
-        disabled 
+      <button
+        disabled
         className="py-3 px-8 rounded font-bold tracking-wide bg-accent-300 text-gray-400"
       >
         Loading...
@@ -107,7 +118,7 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
   }
 
   switch (status) {
-    case 'purchase':
+    case "purchase":
       return (
         <button
           onClick={getCheckoutLink}
@@ -117,7 +128,7 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
         </button>
       );
 
-    case 'purchasing':
+    case "purchasing":
       return (
         <button
           disabled
@@ -127,7 +138,7 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
         </button>
       );
 
-    case 'download':
+    case "download":
       return (
         <button
           onClick={handleDownload}
@@ -137,7 +148,7 @@ const PurchaseContentBtn = ({ contentId }: { contentId: string }) => {
         </button>
       );
 
-    case 'checkout':
+    case "checkout":
       return (
         <Link
           href={checkoutLink!}

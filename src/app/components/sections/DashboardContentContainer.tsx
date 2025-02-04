@@ -6,6 +6,7 @@ import { MdDelete, MdModeEdit } from "react-icons/md";
 import EditContentModal from "../modals/EditContentModal";
 import { useState } from "react";
 import { DeleteContentModal } from "../modals/DeleteContentModal";
+import Link from "next/link";
 
 const DashboardContentContainer = ({
   content,
@@ -81,7 +82,10 @@ const DashboardContentContainer = ({
                 alt={item.title}
                 className="w-40 h-40"
               />
-              <div className="my-2 px-1 flex flex-col h-auto justify-between flex-1">
+              <Link
+                href={`/content/${item.id}`}
+                className="my-2 px-1 flex flex-col h-auto justify-between flex-1"
+              >
                 <div className="space-y-1">
                   <p className="font-bold text-sm">
                     {truncateText(item.title, 50)}
@@ -98,16 +102,19 @@ const DashboardContentContainer = ({
                     {formatDate(item.createdAt)}
                   </p>
                 </div>
-              </div>
+              </Link>
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {content.map((item) => (
-            <ContentCard key={item.id} content={item} />
-          ))}
-        </div>
+        <>
+          <p className="mb-2">Reload the page if you dont see your purchase</p>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {content.map((item) => (
+              <ContentCard key={item.id} content={item} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

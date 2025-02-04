@@ -36,9 +36,11 @@ export interface Content {
   course: string;
   tags: string[];
   publisher: string;
-  contentId: string;
   previewUrl: string;
   createdAt: Date;
+  summaryAvailable?: boolean;
+  verified?: boolean;
+  pendingHumanVerification?: boolean;
 }
 
 export interface Transaction {

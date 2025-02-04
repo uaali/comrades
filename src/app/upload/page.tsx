@@ -130,7 +130,6 @@ const UploadPage = () => {
       });
 
       toast.dismiss();
-
       toast.success("Content uploaded successfully!");
       router.push("/dashboard?tab=uploaded");
     } catch (error) {

@@ -176,6 +176,11 @@ export async function POST(request: Request) {
         `My profit for ${transaction.contentId}`
       );
 
+      //update firestore downloads
+      batch.update(contentRef, {
+        downloads: admin.firestore.FieldValue.increment(1),
+      });
+
       // Update firestore with rounded values
       const transactionDoc = db.collection("transactions").doc(api_ref);
       batch.update(transactionDoc, {
