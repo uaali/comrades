@@ -44,7 +44,10 @@ const PurchaseContentBtn = ({
         const purchaseSnap = await getDoc(purchaseRef);
 
         if (purchaseSnap.exists()) {
-          const fileRef = ref(storage, `uploads/${publisherId}/${contentId}/file`);
+          const fileRef = ref(
+            storage,
+            `uploads/${publisherId}/${contentId}/file`
+          );
           const url = await getDownloadURL(fileRef);
           setDownloadURL(url);
           setStatus("download");
@@ -83,12 +86,14 @@ const PurchaseContentBtn = ({
     setStatus("purchasing");
     const toastId = toast.loading("Redirecting you in a few...");
     try {
+      const firebaseToken = await user.getIdToken();
       const response = await fetch("/api/intasend/purchase/get-link", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${firebaseToken}`,
         },
-        body: JSON.stringify({ contentId, userId: user?.uid }),
+        body: JSON.stringify({ contentId }),
       });
       const data = await response.json();
       if (data.errors || data.error) {

@@ -1,8 +1,8 @@
 "use client";
 
 import { auth, db } from "@/lib/firebase/config";
-import { doc } from "firebase/firestore";
-import { useState } from "react";
+import { doc, setDoc, updateDoc } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import { MdAdd } from "react-icons/md";
@@ -37,6 +37,13 @@ const Quiz = () => {
     user ? doc(db, `users/${user.uid}`) : null
   );
 
+  useEffect(() => {
+    if (quiz && quiz.completed) {
+      setShowResults(true);
+      setUserAnswers(quiz.userAnswers || []);
+    }
+  }, [quiz]);
+
   const handleAnswerSelect = (selectedOption: string): void => {
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestion] = selectedOption;
@@ -50,12 +57,31 @@ const Quiz = () => {
     }, 0);
   };
 
-  const nextQuestion = (): void => {
+  const saveQuizCompletion = async () => {
+    if (!user || !quiz) return;
+    try {
+      const quizRef = doc(db, `quizes/${user.uid}`);
+      await setDoc(
+        quizRef,
+        {
+          completed: true,
+          userAnswers,
+          score: calculateScore(),
+        },
+        { merge: true }
+      );
+    } catch (error) {
+      toast.error("Failed to save quiz progress");
+    }
+  };
+
+  const nextQuestion = async (): Promise<void> => {
     if (!quiz) return;
     if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
       setShowResults(true);
+      await saveQuizCompletion();
     }
   };
 
@@ -139,7 +165,11 @@ const Quiz = () => {
       </div>
     );
 
-  if (firebaseUser && firebaseUser.ai_tokens === undefined) {
+  if (!firebaseUser) {
+    return <p>You need to be logged in to create a quiz</p>;
+  }
+
+  if (firebaseUser && !quiz) {
     return (
       <div className="min-h-[400px] flex flex-col items-center justify-center">
         <CreateQuizModal

@@ -1,9 +1,11 @@
 "use client";
 
+import { auth } from "@/lib/firebase/config";
 import { User } from "@/types";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
 import toast from "react-hot-toast";
 import { IoMdShareAlt } from "react-icons/io";
 import { MdArrowForward } from "react-icons/md";
@@ -11,13 +13,16 @@ import { MdArrowForward } from "react-icons/md";
 const Balances = ({ user }: { user: User }) => {
   const [walletBalance, setWalletBalance] = useState<null | string>();
   const [tokenBalance, setTokenBalance] = useState<null | number>();
+  const [authUser] = useAuthState(auth)
 
   useEffect(() => {
     const fetchWallet = async () => {
+      const firebaseToken = await authUser?.getIdToken()
       const data = await fetch("/api/intasend/get-wallet", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${firebaseToken}`,
         },
         body: JSON.stringify({ id: user.walletId }),
       });

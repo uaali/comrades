@@ -1,14 +1,20 @@
-import { createDocument, db } from "@/lib/firebase/admin";
+import { admin, createDocument, db } from "@/lib/firebase/admin";
 import { generateRandomStr } from "@/utils/generateRandomStr";
 import { sendOTP } from "@/utils/sendOTP";
 import { validateAndNormalizePhone } from "@/utils/validatePhoneAndNormalize";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
+  const headers = request.headers.get("Authorization");
+  const userToken = headers?.split(" ")[1];
   try {
-    const { phone, amount, userId, email, displayName } = await request.json();
-
+    const { phone, amount, email, displayName } = await request.json();
     //validation
+    if (!userToken) {
+      return NextResponse.json("Unauthorized", { status: 401 });
+    }
+    const decodedToken = await admin.auth().verifyIdToken(userToken);
+    const userId = decodedToken.uid;
     if (!validateAndNormalizePhone(phone)) {
       return NextResponse.json("Invalid phone number", { status: 400 });
     }
@@ -24,7 +30,7 @@ export async function POST(request: Request) {
     const formattedPhone: string = validateAndNormalizePhone(phone)!;
 
     // Generate 6-digit OTP
-    const otp = generateRandomStr()
+    const otp = generateRandomStr();
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 10);
 
@@ -40,7 +46,7 @@ export async function POST(request: Request) {
       if (docSnap.exists) {
         const data = docSnap.data()!;
         const retries = (data.retries || 0) + 1;
-        
+
         // Check if user is in timeout period
         if (data.tryAgain && data.tryAgain.toDate() > new Date()) {
           shouldSendOTP = false;
@@ -84,7 +90,7 @@ export async function POST(request: Request) {
         const walletId = userData.walletId;
         // Create new document
         transaction.set(docRef, {
-          phone:formattedPhone,
+          phone: formattedPhone,
           email,
           amount,
           otp,
@@ -105,7 +111,6 @@ export async function POST(request: Request) {
       await sendOTP({ email, otp, phone: formattedPhone, amount, displayName });
       return NextResponse.json("OTP sent successfully", { status: 200 });
     }
-
   } catch (error) {
     return NextResponse.json("Internal server error", { status: 500 });
   }

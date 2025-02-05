@@ -40,14 +40,15 @@ const WithdrawalForm = ({ walletBalance }: { walletBalance: string }) => {
     }
     try {
       toast.loading("Verifying OTP...");
+      const firebaseToken = await user?.getIdToken();
       const response = await fetch("/api/withdraw/verify-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${firebaseToken}`,
         },
         body: JSON.stringify({
           otp,
-          userId: user?.uid,
           displayName: user?.displayName,
         }),
       });
@@ -74,16 +75,17 @@ const WithdrawalForm = ({ walletBalance }: { walletBalance: string }) => {
     }
     toast.loading("Sending OTP...");
     // Send OTP
+    const firebaseToken = await user.getIdToken();
     try {
       const response = await fetch("/api/withdraw/send-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${firebaseToken}`,
         },
         body: JSON.stringify({
           phone,
           amount:Number(amount).toFixed(0),
-          userId: user.uid,
           email: user.email,
           displayName: user.displayName,
         }),

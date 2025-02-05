@@ -1,4 +1,4 @@
-import { createDocument, getDocument } from "@/lib/firebase/admin";
+import { admin, createDocument, getDocument } from "@/lib/firebase/admin";
 import { NextResponse } from "next/server";
 import IntaSend from "intasend-node";
 import { Timestamp } from "firebase-admin/firestore";
@@ -10,9 +10,16 @@ const intasend = new IntaSend(
 );
 
 export async function POST(request: Request) {
+  const headers = request.headers.get("Authorization");
+  const userToken = headers?.split(" ")[1];
   try {
     const data = await request.json();
-    const { contentId, userId } = data;
+    const { contentId } = data;
+    if (!contentId || !userToken) {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
+    const decodedToken = await admin.auth().verifyIdToken(userToken);
+    const userId = decodedToken.uid;
 
     //get content price from firestore
     const content = await getDocument("uploads", contentId);

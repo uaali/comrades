@@ -1,4 +1,4 @@
-import { createDocument, db } from "@/lib/firebase/admin";
+import { admin, createDocument, db } from "@/lib/firebase/admin";
 import { NextResponse } from "next/server";
 import IntaSend from "intasend-node";
 
@@ -9,9 +9,15 @@ const intasend = new IntaSend(
 );
 
 export async function POST(request: Request) {
+  const headers = request.headers.get("Authorization");
+  const userToken = headers?.split(" ")[1];
   try {
-    const { otp, userId, displayName } = await request.json();
-
+    const { otp, displayName } = await request.json();
+    if (!userToken) {
+      return NextResponse.json("Unauthorized", { status: 401 });
+    }
+    const decodedToken = await admin.auth().verifyIdToken(userToken);
+    const userId = decodedToken.uid;
     if (!userId) {
       return NextResponse.json("You need to be logged in to withdraw", {
         status: 400,
