@@ -131,7 +131,7 @@ const UploadPage = () => {
 
       toast.dismiss();
       toast.success("Content uploaded successfully!");
-      router.push("/dashboard?tab=uploaded");
+      router.push("/dashboard");
     } catch (error) {
       toast.dismiss();
       toast.error("Failed to upload content");

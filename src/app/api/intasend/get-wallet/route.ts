@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     const responseData = await response.json();
     return NextResponse.json(responseData);
   } catch (error) {
-    console.error("Error creating wallet:", error);
+    console.error("Error getting wallet:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

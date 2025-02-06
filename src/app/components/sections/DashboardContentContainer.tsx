@@ -107,14 +107,11 @@ const DashboardContentContainer = ({
           ))}
         </div>
       ) : (
-        <>
-          <p className="mb-2">Reload the page if you dont see your purchase</p>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {content.map((item) => (
-              <ContentCard key={item.id} content={item} />
-            ))}
-          </div>
-        </>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {content.map((item) => (
+            <ContentCard key={item.id} content={item} />
+          ))}
+        </div>
       )}
     </div>
   );

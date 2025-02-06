@@ -19,7 +19,6 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { useSearchParams } from "next/navigation";
 
 const Dashboard = () => {
   const [user, loading, error] = useAuthState(auth);
@@ -27,18 +26,6 @@ const Dashboard = () => {
   const [currentCategory, setCurrentCategory] = useState("uploaded");
   const [uploadedContent, setUploadedContent] = useState<null | Content[]>();
   const [purchasedContent, setPurchasedContent] = useState<null | Content[]>();
-
-  const searchParams = useSearchParams();
-  const tab = searchParams.get("tab");
-
-  useEffect(() => {
-    if (!tab) return;
-    if (tab === "uploaded") {
-      setCurrentCategory("uploaded");
-    } else if (tab === "purchased") {
-      setCurrentCategory("purchased");
-    }
-  }, []);
 
   useEffect(() => {
     if (!user || error) return;

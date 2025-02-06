@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       currency: "KES",
       amount: price,
       api_ref: transactionId,
-      redirect_url: `${process.env.BASE_URL}/dashboard?tab=purchased`,
+      redirect_url: `${process.env.BASE_URL}/content/${contentId}`,
     });
 
     return NextResponse.json({ checkoutLink: response.url }, { status: 200 });

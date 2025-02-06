@@ -42,7 +42,6 @@ const VerifyAsOwner = ({
   if (!isOwner || !user) return null;
 
   const verifyContent = async () => {
-    setSending(true);
     if (verificationType === "ai") {
       const userTokens = fetchedUser?.ai_tokens || 0;
       if (userTokens < aiSummary?.tokensUsed) {
@@ -50,6 +49,7 @@ const VerifyAsOwner = ({
         return;
       }
     }
+    setSending(true);
     try {
       toast.loading("Sending Request...");
       const firebaseToken = await user.getIdToken();

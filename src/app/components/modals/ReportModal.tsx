@@ -16,7 +16,6 @@ interface ReportCase {
 const uploadReportCases: ReportCase[] = [
   { id: "inappropriate-content", label: "Inappropriate Content" },
   { id: "copyright-violation", label: "Copyright Violation" },
-  { id: "wrong-format", label: "Wrong Format/File Type" },
   { id: "corrupt-file", label: "Corrupt or Damaged File" },
   { id: "duplicate-upload", label: "Duplicate Upload" },
 ];

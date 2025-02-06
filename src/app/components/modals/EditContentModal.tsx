@@ -19,6 +19,14 @@ const EditContentModal = ({
   const [updating, setUpdating] = useState(false);
 
   const updateContent = async () => {
+    if (newTitle.trim() === "" || newDescription.trim() === "") {
+      toast.error("Please fill all fields");
+      return;
+    }
+    if(newPrice < 10){
+      toast.error("Price must be greater than 10");
+      return;
+    }
     setUpdating(true);
     toast.loading("Updating content...");
     await updateDocument("uploads", content.id, {
@@ -44,6 +52,7 @@ const EditContentModal = ({
             type="text"
             id="title"
             value={newTitle}
+            maxLength={100}
             onChange={(e) => setNewTitle(e.target.value)}
           />
         </div>
@@ -54,6 +63,7 @@ const EditContentModal = ({
             rows={4}
             id="description"
             value={newDescription}
+            maxLength={500}
             onChange={(e) => setNewDescription(e.target.value)}
           />
         </div>
@@ -64,6 +74,7 @@ const EditContentModal = ({
             type="number"
             id="price"
             value={newPrice}
+            min={10}
             onChange={(e) => setNewPrice(Number(e.target.value))}
           />
         </div>
@@ -73,7 +84,11 @@ const EditContentModal = ({
           <Button color="gray" onClick={() => setModalOpen(false)}>
             Cancel
           </Button>
-          <Button disabled={updating} color="blue" onClick={async () => await updateContent()}>
+          <Button
+            disabled={updating}
+            color="blue"
+            onClick={async () => await updateContent()}
+          >
             {updating ? "Updating..." : "Update"}
           </Button>
         </div>

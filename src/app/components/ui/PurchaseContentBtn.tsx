@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { useCollection, useDocument } from "react-firebase-hooks/firestore";
 import toast from "react-hot-toast";
 
 const PurchaseContentBtn = ({
@@ -23,6 +24,11 @@ const PurchaseContentBtn = ({
   const [downloadURL, setDownloadURL] = useState<string | null>(null);
   const [checkoutLink, setCheckoutLink] = useState<string | null>(null);
   const [user, authLoading] = useAuthState(auth);
+
+  const [purchaseSnap] = useDocument(
+    user ? doc(db, `uploads/${contentId}/purchases/${user.uid}`) : null
+  );
+
   const router = useRouter();
 
   useEffect(() => {
@@ -37,12 +43,9 @@ const PurchaseContentBtn = ({
       }
 
       try {
-        const purchaseRef = doc(
-          db,
-          `uploads/${contentId}/purchases/${user.uid}`
-        );
-        const purchaseSnap = await getDoc(purchaseRef);
-
+        if (!purchaseSnap) {
+          return;
+        }
         if (purchaseSnap.exists()) {
           const fileRef = ref(
             storage,
@@ -62,7 +65,7 @@ const PurchaseContentBtn = ({
     };
 
     checkPurchaseAndGetUrl();
-  }, [user, authLoading, contentId]);
+  }, [user, authLoading, contentId,purchaseSnap]);
 
   const handleDownload = () => {
     if (downloadURL) {
