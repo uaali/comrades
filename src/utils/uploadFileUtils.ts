@@ -38,3 +38,9 @@ export const validateForm = (data: UploadFormData) => {
   }
   return true;
 };
+
+
+export function getFileExtension(filename: string) {
+  if (!filename.includes(".")) return "";
+  return filename.split(".").pop()?.toLowerCase() ?? "";
+}

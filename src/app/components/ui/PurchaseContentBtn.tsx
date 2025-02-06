@@ -65,7 +65,7 @@ const PurchaseContentBtn = ({
     };
 
     checkPurchaseAndGetUrl();
-  }, [user, authLoading, contentId,purchaseSnap]);
+  }, [user, authLoading, contentId, purchaseSnap]);
 
   const handleDownload = () => {
     if (downloadURL) {

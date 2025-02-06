@@ -6,7 +6,7 @@ import UploadPreviewFileDropzone from "../components/ui/UploadPreviewFileDropzon
 import TagsInput from "../components/sections/TagsInput";
 import { UploadFormData } from "@/types";
 import toast from "react-hot-toast";
-import { compressFiles, validateForm } from "../../utils/uploadFileUtils";
+import { compressFiles, getFileExtension, validateForm } from "../../utils/uploadFileUtils";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db, provider, storage } from "@/lib/firebase/config";
 import CourseSelection from "../components/ui/CourseSelection";
@@ -80,8 +80,8 @@ const UploadPage = () => {
     }
     toast.loading("Compressing files...");
     const compressedFile = await compressFiles(files);
+    
     toast.dismiss();
-
     const validation = validateForm(newFormData);
     if (validation !== true) {
       toast.error(validation);
@@ -93,15 +93,17 @@ const UploadPage = () => {
       toast.loading("Uploading content...");
       const contentId = doc(collection(db, "uploads")).id;
 
+      const fileName = `TirigistFile.${getFileExtension(compressedFile.name)}`;
       const fileRef = ref(storage, `uploads/${user.uid}/${contentId}/file`);
-      await uploadBytes(fileRef, compressedFile);
+      await uploadBytes(fileRef, compressedFile,{
+        contentDisposition: `attachment; filename="${fileName}"`,
+      });
 
       const previewRef = ref(
         storage,
         `uploads/${user.uid}/${contentId}/preview`
       );
       await uploadBytes(previewRef, previewFile);
-
 
       //save course
       if (newFormData.course !== "" && formData.courseExisted === false) {
@@ -118,7 +120,7 @@ const UploadPage = () => {
       const previewUrl = await getDownloadURL(previewRef);
 
       delete newFormData.courseExisted;
-      
+
       //save to firestore
       const docRef = doc(db, "uploads", contentId);
       await setDoc(docRef, {
