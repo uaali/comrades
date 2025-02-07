@@ -1,10 +1,17 @@
-import WithdrawalForm from "@/app/components/sections/WithdrawalForm";
+"use client";
 
-const fetchWallet = async (id: string) => {
-  const data = await fetch(`${process.env.BASE_URL}/api/intasend/get-wallet`, {
+import WithdrawalForm from "@/app/components/sections/WithdrawalForm";
+import { auth } from "@/lib/firebase/config";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+
+const fetchWallet = async (id: string, token: string) => {
+  const data = await fetch(`/api/intasend/get-wallet`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
     },
     body: JSON.stringify({ id }),
   });
@@ -12,10 +19,29 @@ const fetchWallet = async (id: string) => {
   return wallet;
 };
 
-const Withdraw = async ({ params }: { params: Promise<{ id: string }> }) => {
-  const { id } = await params;
-  const wallet = await fetchWallet(id);
+const Withdraw = () => {
+  const [wallet, setWallet] = useState<null | any>(null);
+  const [user] = useAuthState(auth);
+  const params = useParams();
+  const id = params.id as string;
 
+  useEffect(() => {
+    if (!user || !id) return;
+    const fetchData = async () => {
+      const firebaseToken = await user.getIdToken();
+      const data = await fetchWallet(id, firebaseToken);
+      return data;
+    };
+    fetchData().then((data) => {
+      setWallet(data);
+    });
+  }, [user, id]);
+  console.log("Wallet", wallet);
+  console.log("User",user);
+  console.log("Id",id);
+  if (!wallet || !user || !id) {
+    return <p>Loading...</p>;
+  }
   let withdrawableAmount = wallet.available_balance - 15;
   if (withdrawableAmount < 1) withdrawableAmount = 0;
   return (
