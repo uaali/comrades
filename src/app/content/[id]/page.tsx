@@ -130,7 +130,11 @@ const ContentPage = async ({ params }: { params: Promise<{ id: string }> }) => {
               pendingHumanVerification={pendingHumanVerification}
             />
           )}
-          <Summary contentId={id} summaryPurchased={verified} />
+          <Summary
+            contentId={id}
+            summaryPurchased={verified}
+            pendingHumanVerification={pendingHumanVerification}
+          />
           <div className="mt-2">
             <p className="font-bold tracking-wide font-poppins">Description</p>
             <p>{description}</p>

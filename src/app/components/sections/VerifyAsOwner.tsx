@@ -56,7 +56,7 @@ const VerifyAsOwner = ({
     try {
       toast.loading("Sending Request...");
       const firebaseToken = await user.getIdToken();
-      await fetch(`/api/verify-content`, {
+      const response = await fetch(`/api/verify-content`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -67,6 +67,9 @@ const VerifyAsOwner = ({
           verificationType,
         }),
       });
+      if (!response.ok) {
+        throw new Error();
+      }
       toast.dismiss();
       toast("Success");
       setSending(false);
@@ -74,6 +77,7 @@ const VerifyAsOwner = ({
       setTrustModalOpen(false);
     } catch (error) {
       toast.dismiss();
+      setSending(false);
       toast.error("An error occurred. Please try again later.");
     }
   };

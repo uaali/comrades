@@ -22,6 +22,20 @@ export async function POST(req: Request) {
     if (publisher !== userId) {
       throw new Error();
     }
+    if (verificationType === "human") {
+      const pendingVerificationRef = db
+        .collection("pendingVerifications")
+        .doc(contentId);
+      await pendingVerificationRef.set({
+        createdAt: Timestamp.now(),
+      });
+      await contentRef.update({
+        pendingHumanVerification: true,
+      });
+      return NextResponse.json("Content sent for human verification.", {
+        status: 200,
+      });
+    }
     const summaryRef = db.collection("summaries").doc(contentId);
     const summary = await summaryRef.get();
     if (!summary.exists) {
@@ -35,28 +49,16 @@ export async function POST(req: Request) {
       throw new Error();
     }
     const userDoc = user.data();
-    if (verificationType === "ai") {
-      const userTokens = userDoc?.ai_tokens || 0;
-      if (userTokens < usedTokens) {
-        throw new Error();
-      }
-      await contentRef.update({
-        verified: true,
-      });
-      await userRef.update({
-        ai_tokens: userTokens - usedTokens,
-      });
-    } else {
-      const pendingVerificationRef = db
-        .collection("pendingVerifications")
-        .doc(contentId);
-      await pendingVerificationRef.set({
-        createdAt: Timestamp.now(),
-      });
-      await contentRef.update({
-        pendingHumanVerification: true,
-      });
+    const userTokens = userDoc?.ai_tokens || 0;
+    if (userTokens < usedTokens) {
+      throw new Error();
     }
+    await contentRef.update({
+      verified: true,
+    });
+    await userRef.update({
+      ai_tokens: userTokens - usedTokens,
+    });
     return NextResponse.json("Content verified successfully.", { status: 200 });
   } catch (error) {
     return NextResponse.json("Invalid request", { status: 400 });
