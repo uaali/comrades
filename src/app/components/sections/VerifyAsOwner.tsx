@@ -35,13 +35,16 @@ const VerifyAsOwner = ({
   );
   const [trustModalOpen, setTrustModalOpen] = useState(false);
   const [buyTokensModalOpen, setBuyTokensModalOpen] = useState(false);
-  const [verificationType, setVerificationType] = useState("ai");
+  const [verificationType, setVerificationType] = useState<
+    null | "ai" | "human"
+  >(null);
   const [sending, setSending] = useState(false);
   const isOwner = publisher === user?.uid;
 
   if (!isOwner || !user) return null;
 
   const verifyContent = async () => {
+    if (verificationType === null) return;
     if (verificationType === "ai") {
       const userTokens = fetchedUser?.ai_tokens || 0;
       if (userTokens < aiSummary?.tokensUsed) {
@@ -65,7 +68,7 @@ const VerifyAsOwner = ({
         }),
       });
       toast.dismiss();
-      toast.success("Content verified successfully.");
+      toast("Success");
       setSending(false);
       window.location.reload();
       setTrustModalOpen(false);
@@ -208,28 +211,30 @@ const VerifyAsOwner = ({
               >
                 Cancel
               </Button>
-              <button
-                disabled={sending}
-                onClick={verifyContent}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
-              >
-                {sending ? (
-                  "Sending..."
-                ) : (
-                  <>
-                    {verificationType === "ai" ? (
-                      <>
-                        {fetchedUser.ai_tokens === undefined ||
-                        fetchedUser.ai_tokens < aiSummary?.tokensUsed
-                          ? "Buy AI tokens (Very Affordable)"
-                          : "Verify with AI"}
-                      </>
-                    ) : (
-                      "Verify with Human"
-                    )}
-                  </>
-                )}
-              </button>
+              {verificationType && (
+                <button
+                  disabled={sending}
+                  onClick={verifyContent}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+                >
+                  {sending ? (
+                    "Sending..."
+                  ) : (
+                    <>
+                      {verificationType === "ai" ? (
+                        <>
+                          {fetchedUser.ai_tokens === undefined ||
+                          fetchedUser.ai_tokens < aiSummary?.tokensUsed
+                            ? "Buy AI tokens (Very Affordable)"
+                            : "Verify with AI"}
+                        </>
+                      ) : (
+                        "Verify with Human"
+                      )}
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </Modal.Footer>
         </Modal>
