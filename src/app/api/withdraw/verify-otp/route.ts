@@ -107,7 +107,7 @@ export async function POST(request: Request) {
             const bufferString = Buffer.from(error.data).toString();
             const parsedError = JSON.parse(bufferString);
             const errorMessage =
-              parsedError.errors?.[0]?.detail || "IntaSend error occurred";
+              parsedError.errors?.[0]?.detail || "An error occurred";
             return NextResponse.json(errorMessage, { status: 400 });
           } catch {
             // If parsing fails, return the stringified error

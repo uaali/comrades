@@ -11,13 +11,23 @@ const fetchWallet = async (id: string, token: string) => {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ id }),
   });
   const wallet = await data.json();
   return wallet;
 };
+
+function calculateWithdrawableAmount(availableBalance: string) {
+  const balance = Math.floor(Number(availableBalance));
+  const transactionFee = Math.max(
+    Math.min(balance * 0.015, 100),
+    15
+  );
+  const withdrawableAmount = Math.floor(balance - transactionFee);
+  return Math.max(withdrawableAmount, 0);
+}
 
 const Withdraw = () => {
   const [wallet, setWallet] = useState<null | any>(null);
@@ -36,13 +46,12 @@ const Withdraw = () => {
       setWallet(data);
     });
   }, [user, id]);
-  console.log("Wallet", wallet);
-  console.log("User",user);
-  console.log("Id",id);
   if (!wallet || !user || !id) {
     return <p>Loading...</p>;
   }
-  let withdrawableAmount = wallet.available_balance - 15;
+  let withdrawableAmount = calculateWithdrawableAmount(
+    wallet.available_balance
+  );
   if (withdrawableAmount < 1) withdrawableAmount = 0;
   return (
     <div className="p-4 md:px-6 font-inter">

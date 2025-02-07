@@ -34,13 +34,14 @@ const WithdrawalForm = ({ walletBalance }: { walletBalance: string }) => {
   const router = useRouter();
 
   const handleWithdraw = async () => {
+    if (!user) return;
     if (!otp) {
       toast.error("Please enter the OTP");
       return;
     }
     try {
       toast.loading("Verifying OTP...");
-      const firebaseToken = await user?.getIdToken();
+      const firebaseToken = await user.getIdToken();
       const response = await fetch("/api/withdraw/verify-otp", {
         method: "POST",
         headers: {
@@ -49,7 +50,7 @@ const WithdrawalForm = ({ walletBalance }: { walletBalance: string }) => {
         },
         body: JSON.stringify({
           otp,
-          displayName: user?.displayName,
+          displayName: user.displayName,
         }),
       });
       toast.dismiss();
@@ -85,7 +86,7 @@ const WithdrawalForm = ({ walletBalance }: { walletBalance: string }) => {
         },
         body: JSON.stringify({
           phone,
-          amount:Number(amount).toFixed(0),
+          amount: Number(amount).toFixed(0),
           email: user.email,
           displayName: user.displayName,
         }),
