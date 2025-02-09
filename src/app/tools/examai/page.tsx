@@ -14,8 +14,8 @@ const ExamAi = () => {
         Exam AI
       </p>
       <p className="text-sm my-2">
-        "An AI to test your knowledge in a given topic. Utilize it to prepare
-        for exams and when you want to study in a fun easy way."
+        "An AI to show you you know nothing about a given topic. Utilize it to prepare
+        for exams and when you want to explore a topic in a fun easy way."
       </p>
       <hr />
       <div className="my-4">
