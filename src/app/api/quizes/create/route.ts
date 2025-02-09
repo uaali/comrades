@@ -80,6 +80,8 @@ export async function POST(request: Request) {
           title,
           topic,
           questions,
+          completed: false,
+          userAnswers: [],
         });
       });
       return NextResponse.json({ questions }, { status: 200 });
