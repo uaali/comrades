@@ -13,6 +13,7 @@ import { truncateText } from "@/utils/truncateText";
 import IDontAgree from "./IDontAgree";
 import BuyTokens from "../modals/BuyTokens";
 import { QuizQuestion } from "@/types";
+import GoogleBtn from "../ui/GoogleBtn";
 
 const Quiz = () => {
   const [buyTokensModalOpen, setBuyTokensModalOpen] = useState(false);
@@ -166,7 +167,12 @@ const Quiz = () => {
     );
 
   if (!firebaseUser) {
-    return <p>You need to be logged in to create a quiz</p>;
+    return (
+      <div>
+        <p>You need to be logged in to create a quiz</p>
+        <GoogleBtn />
+      </div>
+    );
   }
 
   if (firebaseUser && !quiz) {
