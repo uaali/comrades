@@ -74,6 +74,7 @@ exports.createUserDocument = functions
         createdAt: user.metadata.creationTime,
         walletId: responseData.wallet_id,
         tokenBalance: 0,
+        ai_tokens: 0,
       };
 
       const batch = db.batch();

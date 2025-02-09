@@ -30,7 +30,7 @@ const Quiz = () => {
   const [createQuizModalOpen, setCreateQuizModalOpen] =
     useState<boolean>(false);
   const [creatingQuiz, setCreatingQuiz] = useState<boolean>(false);
-  const [user] = useAuthState(auth);
+  const [user,fetchingUser] = useAuthState(auth);
   const [quiz, loading, error] = useDocumentData(
     user ? doc(db, `quizes/${user.uid}`) : null
   );
@@ -166,7 +166,7 @@ const Quiz = () => {
       </div>
     );
 
-  if (!firebaseUser) {
+  if (!firebaseUser && !loading && !fetchingFirebaseUser && !fetchingUser) {  
     return (
       <div>
         <p>You need to be logged in to create a quiz</p>

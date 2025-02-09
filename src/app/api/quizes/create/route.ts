@@ -94,9 +94,6 @@ export async function POST(request: Request) {
       const parsedResp = JSON.parse(resp.choices[0].message.content);
       const questions = parsedResp.questions;
       await db.runTransaction(async (transaction) => {
-        transaction.update(userRef, {
-          ai_tokens: 0,
-        });
         transaction.create(quizRef, {
           title,
           topic,
