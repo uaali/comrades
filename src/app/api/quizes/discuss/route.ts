@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     sanitizedMessages.push(systemMessage);
 
     // Load the encoder for the model
-    const encoder = encodingForModel("gpt-4o-mini");
+    const encoder = encodingForModel("gpt-4o");
 
     // Count tokens in all messages
     const tokenCounts = sanitizedMessages.map(
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: sanitizedMessages,
       }),
     });

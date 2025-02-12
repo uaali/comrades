@@ -85,7 +85,7 @@ const IDontAgree = ({
     //check tokens
 
     // Load the encoder for the model
-    const encoder = encodingForModel("gpt-4o-mini");
+    const encoder = encodingForModel("gpt-4o");
 
     // Count tokens in all messages
     const tokenCounts = [...messagesToSend, userMessage].map(
